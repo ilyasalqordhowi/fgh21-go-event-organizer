@@ -9,8 +9,8 @@ import (
 type User struct{
 	Id int `json:"id"`
 	Name string `json:"name" form:"name"`
-	Email string `json:"email" form:"email"`
-	Password string `json:"-" form:"password"`
+	Email string `json:"email" form:"email" binding:"required,email"`
+	Password string `json:"-" form:"password" binding:"required,min=8"`
 	
 
 }
@@ -31,7 +31,7 @@ func main() {
 		Name:"ilyas",
 		Email:"ilyas@mail.com",
 		Password:"1234",	
-},
+		},
 	}
 	
 	r.GET("/users",func (c *gin.Context)  {
@@ -47,17 +47,39 @@ func main() {
 	r.POST("/users", func(c *gin.Context) {
 		user:= User{}
 
-		c.Bind(&user)
-
-		user.Id =len(data)+1
-
-		data = append(data,user)
-
-		c.JSON(http.StatusOK, Message{
-			Success : true,
-			Message: "create data",
-			Results: user,
+		err := c.Bind(&user)
+		conditional := true
+		result:= 0
+		for _,i := range data{
+			result = i.Id
+		}
+		user.Id = result + 1
+		for _,i := range data{
+			if i.Email == user.Email && i.Password == user.Password {
+				conditional = false
+			}
+		}
+		if err != nil {
+		c.JSON(http.StatusBadRequest, Message{
+			Success : false,
+			Message: "harus benar",
+			
 		})
+		}else{
+			if conditional {
+				data = append(data,user)
+				c.JSON(http.StatusOK, Message{
+					Success : true,
+					Message: "create data",
+				})
+				}else{
+					c.JSON(http.StatusNotFound, Message{
+						Success : false,
+						Message: "data tidak ditemukan",
+					})
+				}
+			}
+		
 		
 	})
 	r.POST("/auth/login", func(c *gin.Context) {
@@ -66,6 +88,7 @@ func main() {
 		c.Bind(&Auth)
 
 		email := Auth.Email
+		
 		password := Auth.Password
 		
 		
@@ -86,7 +109,6 @@ func main() {
 				
 				dataResults = false
 			}
-
 		c.JSON(http.StatusUnauthorized, Message{
 		Success: false,
 		Message: "email dan password invalid",
@@ -97,12 +119,23 @@ func main() {
 r.PATCH("/users/:id", func(c *gin.Context) {
 		id, _:= strconv.Atoi(c.Param("id"))
 		
-		
 		updatedUser := User{}
-
-		c.Bind(&updatedUser);
-
-		for i, updated := range data {
+		err := c.Bind(&updatedUser);
+		conditional := true
+	for _,i := range data{
+			if i.Email == updatedUser.Email{
+				conditional = false
+			}
+		}
+		if err != nil {
+		c.JSON(http.StatusBadRequest, Message{
+			Success : false,
+			Message: "harus benar",
+			
+		})
+		}else{
+			if conditional {
+					for i, updated := range data {
 			if updated.Id == id {
 				data[i].Name = updatedUser.Name
 				data[i].Email = updatedUser.Email
@@ -115,6 +148,15 @@ r.PATCH("/users/:id", func(c *gin.Context) {
 				return
 			}
 		}
+			
+				}else{
+					c.JSON(http.StatusNotFound, Message{
+						Success : false,
+						Message: "data tidak ditemukan",
+					})
+				}
+			}
+	
 
 		c.JSON(http.StatusNotFound, Message{
 			Success: false,
@@ -143,8 +185,6 @@ r.PATCH("/users/:id", func(c *gin.Context) {
 	})
 	r.DELETE("/users/:id", func(c *gin.Context) {
 		id, _:= strconv.Atoi(c.Param("id"))
-		
-		
 		updatedUser := User{}
 
 		c.Bind(&updatedUser);
