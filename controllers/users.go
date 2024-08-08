@@ -12,11 +12,9 @@ import (
 func ListAllUsers(c *gin.Context){
 	listUsers := models.FindAllUsers()
 		c.JSON(http.StatusOK, lib.Message{
-			
 			Success: true,
 			Message: "success",
 			Results: listUsers,
-			
 		})
 			
 	}
@@ -88,37 +86,37 @@ func DeleteUsers(c *gin.Context){
 
 }
 
-func UpdateUsers(c *gin.Context) {
-	param := c.Param("id")
-	id, err := strconv.Atoi(param)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "invalid user id",
-		})
-		return
-	}
+// func UpdateUsers(c *gin.Context) {
+// 	param := c.Param("id")
+// 	id, err := strconv.Atoi(param)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, lib.Message{
+// 			Success:  false,
+// 			Message: "invalid user id",
+// 		})
+// 		return
+// 	}
 
-	var user models.User
-	if err := c.Bind(&user); err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "invalid request body",
-		})
-		return
-	}
+// 	var user models.User
+// 	if err := c.Bind(&user); err != nil {
+// 		c.JSON(http.StatusBadRequest, lib.Message{
+// 			Success:  false,
+// 			Message: "invalid request body",
+// 		})
+// 		return
+// 	}
 
-	if err := models.UpdateUsers(id, user); err != nil {
-		c.JSON(http.StatusNotFound, lib.Message{
-			Success:  false,
-			Message: "User Not Found",
-		})
-		return
-	}
+// 	if err := models.EditUser(id, user); err != nil {
+// 		c.JSON(http.StatusNotFound, lib.Message{
+// 			Success:  false,
+// 			Message: "User Not Found",
+// 		})
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, lib.Message{
-		Success:  true,
-		Message: "User Success",
-		Results: user,
-	})
-}
+// 	c.JSON(http.StatusOK, lib.Message{
+// 		Success:  true,
+// 		Message: "User Success",
+// 		Results: user,
+// 	})
+// }
