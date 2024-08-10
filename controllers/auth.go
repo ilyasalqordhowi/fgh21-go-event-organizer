@@ -17,19 +17,18 @@ func AuthLogin(ctx *gin.Context) {
     ctx.Bind(&user)
 
     found := models.FindOneUserByEmail(user.Email)
-	fmt.Println(found,"tes")
-
-    // if found == (models.User{}) {
-    //     ctx.JSON(http.StatusUnauthorized,
-    //         lib.Message{
-    //             Success: false,
-    //             Message: "Wrong Email or Password",
-    //         })
-    //     return
-    // }
+    fmt.Println("----------")
+    fmt.Println(user)
+    if found == (models.User{}) {
+        ctx.JSON(http.StatusUnauthorized,
+            lib.Message{
+                Success: false,
+                Message: "Wrong Email",
+            })
+        return
+    }
 
     isVerified := lib.Verify(user.Password, found.Password)
-	// fmt.Println(isVerified)
 
     if isVerified {
         JWToken := lib.GenerateUserIdToken(found.Id)
@@ -40,12 +39,10 @@ func AuthLogin(ctx *gin.Context) {
                 Results: Token{JWToken},
             })
     } else {
-		JWToken := lib.GenerateUserIdToken(found.Id)
         ctx.JSON(http.StatusUnauthorized,
             lib.Message{
                 Success: false,
-                Message: "Wrong Email or Password",
-				Results: Token{JWToken},
+                Message: "Wrong Password",
             })
     }
 }

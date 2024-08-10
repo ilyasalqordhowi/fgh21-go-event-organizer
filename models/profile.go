@@ -10,16 +10,15 @@ import (
 
 type Profile struct {
 	Id            int    `json:"id"`
-	Picture       string `json:"picture" form:"picture"`
-	FullName      string `json:"fullName" form:"fullName"`
-	Birthdate     string `json:"birtdate" form:"birthdate"`
-	Gender        *int    `json:"gender" form:"gender"`
-	PhoneNumber   string `json:"phoneNumber" form:"phoneNumber"`
-	Profession    string `json:"profession" form:"profession"`
-	NationalityId *int `json:"nationalityId" form:"nationalityId"`
-	UserId        *int `json:"userId" form:"userId"`
+	Picture       string `json:"picture" form:"picture" db:"picture"`
+	FullName      string `json:"fullName" form:"fullName" db:"fullName"`
+	Birthdate     string `json:"birtdate" form:"birthdate" db:"birthdate"`
+	Gender        *int    `json:"gender" form:"gender" db:"gender"`
+	PhoneNumber   string `json:"phoneNumber" form:"phoneNumber" db:"phoneNumber"`
+	Profession    string `json:"profession" form:"profession" db:"profession"`
+	NationalityId *int `json:"nationalityId" form:"nationalityId" db:"national"`
+	UserId        *int `json:"userId" form:"userId" db:"userId"`
 }
-
 func CreateProfile(newProfile Profile) Profile {
 	db := lib.DB()
 	defer db.Close(context.Background())
@@ -39,6 +38,7 @@ func CreateProfile(newProfile Profile) Profile {
 		&results.NationalityId,
 		&results.UserId,
 	)
+	fmt.Println(results)
 	return results
 }
 func FindOneProfile(id int) Profile {

@@ -21,6 +21,7 @@ func ListAllUsers(c *gin.Context){
 func DetailUsers(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	data := models.FindOneUser(id)
+	fmt.Println(id)
 
 	if data.Id == id {
 		c.JSON(http.StatusOK, lib.Message{
