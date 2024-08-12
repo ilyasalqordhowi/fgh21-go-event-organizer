@@ -17,7 +17,7 @@ func AuthLogin(ctx *gin.Context) {
     ctx.Bind(&user)
 
     found := models.FindOneUserByEmail(user.Email)
-    fmt.Println("----------")
+    fmt.Println("berhasil")
     fmt.Println(user)
     if found == (models.User{}) {
         ctx.JSON(http.StatusUnauthorized,

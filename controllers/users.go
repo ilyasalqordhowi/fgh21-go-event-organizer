@@ -15,8 +15,7 @@ func ListAllUsers(c *gin.Context){
 			Success: true,
 			Message: "success",
 			Results: listUsers,
-		})
-			
+		})		
 	}
 func DetailUsers(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
@@ -87,37 +86,45 @@ func DeleteUsers(c *gin.Context){
 
 }
 
-// func UpdateUsers(c *gin.Context) {
-// 	param := c.Param("id")
-// 	id, err := strconv.Atoi(param)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, lib.Message{
-// 			Success:  false,
-// 			Message: "invalid user id",
-// 		})
-// 		return
-// 	}
+func Update(c *gin.Context) {
+    param := c.Param("id")
+    id,_  := strconv.Atoi(param)
+    data := models.FindAllUsers()
+	
 
-// 	var user models.User
-// 	if err := c.Bind(&user); err != nil {
-// 		c.JSON(http.StatusBadRequest, lib.Message{
-// 			Success:  false,
-// 			Message: "invalid request body",
-// 		})
-// 		return
-// 	}
+    user := models.User{}
+    err := c.Bind(&user)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
 
-// 	if err := models.EditUser(id, user); err != nil {
-// 		c.JSON(http.StatusNotFound, lib.Message{
-// 			Success:  false,
-// 			Message: "User Not Found",
-// 		})
-// 		return
-// 	}
+    result := models.User{}
+    for _, v := range data {
+        if v.Id == id {
+            result = v
+        }
+    }
 
-// 	c.JSON(http.StatusOK, lib.Message{
-// 		Success:  true,
-// 		Message: "User Success",
-// 		Results: user,
-// 	})
-// }
+    if result.Id == 0 {
+        c.JSON(http.StatusNotFound, lib.Message{
+            Success: false,
+            Message: "user with id " + param + " not found",
+        })
+        return
+    }
+
+    idUser := 0
+    for _, v := range data {
+        idUser = v.Id
+    }
+    user.Id = idUser
+
+    models.EditUser(user.Email, user.Password, *user.Username ,param)
+
+    c.JSON(http.StatusOK, lib.Message{
+        Success: true,
+        Message: "user  id " + param + " edit Success",
+        Results: user,
+    })
+}

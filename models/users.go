@@ -12,17 +12,8 @@ type User struct {
 	Id       int    `json:"id"`
 	Email    string `json:"email" form:"email" binding:"required,email" db:"email"`
 	Password string `json:"-" form:"password" binding:"required,min=8" db:"password"`
-	Username string `json:"username" form:"username" binding:"required" db:"username"`
+	Username *string `json:"username" form:"username" binding:"required" db:"username"`
 }
-
-// var data = []User{
-// 	{
-// 		Id:       1,
-// 		Email:    "ilyas@mail.com",
-// 		Password: "1234",
-// 		Username:  "ilyas",
-// 	},
-// }
 
 func FindAllUsers() []User {
 	db := lib.DB()
@@ -40,8 +31,6 @@ func FindAllUsers() []User {
 	}
 
 	return users
-	// dataUsers := data
-	// return dataUsers
 }
 
 func FindOneUser(id int) User {
@@ -92,6 +81,7 @@ func FindOneUserByEmail(email string) User {
 			user = v
 		}
 	}
+	fmt.Println(user)
 	return user 	
 }
 
@@ -132,12 +122,11 @@ func DeleteUsers(id int) error {
 
     return nil
 }
-// func EditUser(email string, username string, password string, id int) {
-//     db := lib.DB()
-//     defer db.Close(context.Background())
+func EditUser(email string, username string, password string, id string) {
+    db := lib.DB()
+    defer db.Close(context.Background())
 
-//     dataSql := `update "users" set (email , username, password) = ($1, $2, $3) where id=$4`
+    dataSql := `update "users" set (email , username, password) = ($1, $2, $3) where id=$4`
 
-//     db.Exec(context.Background(), dataSql, email, username, password, id)
-
-// }
+    db.Exec(context.Background(), dataSql, email, username, password, id)
+}

@@ -7,10 +7,10 @@ import (
 )
 
 func UserRouter(routerGroup *gin.RouterGroup) {
-	routerGroup.POST("",controllers.CreateUsers)
 	routerGroup.Use(middlewares.AuthMiddleware())
+	routerGroup.POST("",controllers.CreateUsers)
 	routerGroup.GET("", controllers.ListAllUsers)
 	routerGroup.GET("/:id",controllers.DetailUsers)
-	// routerGroup.PATCH("/:id",controllers.UpdateUsers)
+	routerGroup.PATCH("/:id",controllers.Update)
 	routerGroup.DELETE("/:id",controllers.DeleteUsers)
 }	
