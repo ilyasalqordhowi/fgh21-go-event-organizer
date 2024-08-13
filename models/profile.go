@@ -20,7 +20,7 @@ type Profile struct {
 }
 type JoinRegist struct {
     Id       int    `json:"id"`
-    Email    string `json:"email" form:"email" db:"email"`
+    Email    *string `json:"email" form:"email" db:"email"`
     Password string `json:"-" form:"password" db:"password"`
     Results  Profile
 }
@@ -40,10 +40,14 @@ func CreateProfile(joinRegist JoinRegist) ( *Profile , error) {
     if err != nil {
         return nil, fmt.Errorf("failed to insert into users table: %v", err)
     }
+
     fmt.Println("-----")
     fmt.Println(err)
 
-    var profile Profile
+   profile := Profile{
+        UserId:  userId,
+        FullName: joinRegist.Results.FullName,
+    }
     err = db.QueryRow(
         context.Background(),
         `INSERT INTO "profile" ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id", "user_id") 

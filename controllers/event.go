@@ -11,20 +11,12 @@ import (
 )
 func ListAllEvent(c *gin.Context){
 	listEvent := models.FindAllEvent()
-
-    if listEvent != nil {
-    c.JSON(http.StatusUnauthorized, lib.Message{
-    Success: false,
-    Message: "Event Not Found",
-})
-return
-    }
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "success",
-        Results: listEvent,
-    })		
-}
+		c.JSON(http.StatusOK, lib.Message{
+			Success: true,
+			Message: "success",
+			Results: listEvent,
+		})		
+	}
 func DetailEvent(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	data := models.FindOneEvent(id)

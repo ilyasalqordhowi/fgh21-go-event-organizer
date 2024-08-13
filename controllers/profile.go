@@ -23,6 +23,10 @@ func CreateProfile(ctx *gin.Context) {
         lib.Message{
             Success: true,
             Message: "Register User success",
-            Results: profile,
+            Results: gin.H{
+                "id":       profile.Id,
+                "fullName": profile.FullName,
+                "email":    account.Email,
+            },
         })
 }
