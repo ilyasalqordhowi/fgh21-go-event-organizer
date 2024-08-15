@@ -1,0 +1,1 @@
+DROP Table "payment_method"

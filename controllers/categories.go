@@ -10,7 +10,7 @@ import (
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
 )
-func ListAllEvent(c *gin.Context){
+func ListAllCategory(c *gin.Context){
     search := c.Query("search")
     page,_ := strconv.Atoi(c.Query("page"))
 	limit,_ := strconv.Atoi(c.Query("limit"))
@@ -21,12 +21,11 @@ func ListAllEvent(c *gin.Context){
 	if limit < 1 {
         limit = 5
 	}
-    if page > 1 {
+	 if page > 1 {
         page = (page - 1)*limit
     }
-    listEvent,count := models.FindAllEvent(search,page,limit)
-
-    totalPage := math.Ceil(float64(count)/float64(limit))
+    listCategory,count := models.FindAllCategories(search,page,limit)
+	totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
     prev := 0
 
@@ -47,35 +46,35 @@ func ListAllEvent(c *gin.Context){
 		c.JSON(http.StatusOK, lib.Message{
 			Success: true,
 			Message: "success",
-            ResultsInfo: totalInfo,
-			Results: listEvent,
-		})	
+			ResultsInfo: totalInfo,
+			Results: listCategory,
+		})		
 	}
-func DetailEvent(c *gin.Context) {
+func DetailCategory(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data := models.FindOneEvent(id)
+	data := models.FindOneCategories(id)
 	fmt.Println(id)
 
 	if data.Id == id {
 		c.JSON(http.StatusOK, lib.Message{
 			Success: true,
-			Message: "events Found",
+			Message: "categories Found",
 			Results: data,
 		})
 		return
 	} else {
 		c.JSON(http.StatusNotFound, lib.Message{
 			Success: false,
-			Message: "events Not Found",
+			Message: "categories Not Found",
 		})
 	}
 }
-func CreateEvent(c *gin.Context) {
-    newEvents := models.Event{}
+func CreateCategory(c *gin.Context) {
+    newCategory := models.Categories{}
     id, _ := c.Get("userId")
-    err := models.CreateEvent(newEvents, id.(int))
+    err := models.CreateCategories(newCategory, id.(int))
     
-    if err := c.ShouldBind(&newEvents); err != nil {
+    if err := c.ShouldBind(&newCategory); err != nil {
         c.JSON(http.StatusBadRequest, lib.Message{
             Success: false,
             Message: "Invalid input data",
@@ -90,22 +89,22 @@ func CreateEvent(c *gin.Context) {
         return
     }
     
-    // newEvents.CreateBy = id.(int)
+    // newCategory.CreateBy = id.(int)
     c.JSON(http.StatusOK, lib.Message{
         Success: true,
         Message: "Events created successfully",
-        Results: newEvents,
+        Results: newCategory,
     })
 
 }
-func DeleteEvent(c *gin.Context){
+func DeleteCategory(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
-	dataEvent := models.FindOneEvent(id)
+	dataCategory := models.FindOneCategories(id)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, lib.Message{
 			Success:  false,
-			Message: "Invalid Event ID",
+			Message: "Invalid Category ID",
 		})
 		return
 	}
@@ -121,13 +120,13 @@ func DeleteEvent(c *gin.Context){
 
 	c.JSON(http.StatusOK, lib.Message{
 		Success:  true,
-		Message: "Event deleted successfully",
-		Results: dataEvent,
+		Message: "Category deleted successfully",
+		Results: dataCategory,
 	})
 
 }
 
-func UpdateEvent(c *gin.Context) {
+func UpdateCategory(c *gin.Context) {
     param := c.Param("id")
     id,_  := strconv.Atoi(param)
     search := c.Query("search")
@@ -139,15 +138,12 @@ func UpdateEvent(c *gin.Context) {
 	}
 	if limit < 1 {
         limit = 5
-	}
-     if page > 1 {
+	} 
+	if page > 1 {
         page = (page - 1)*limit
     }
-
-    data,count := models.FindAllEvent(search,page,limit)
-
-
-    totalPage := math.Ceil(float64(count)/float64(limit))
+    data,count := models.FindAllCategories(search,page,limit)
+	totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
     prev := 0
 
@@ -165,16 +161,15 @@ func UpdateEvent(c *gin.Context) {
         Next: next,
         Prev: prev,
     }
-	
 
-   event := models.Event{}
-    err := c.Bind(&event)
+   category := models.Categories{}
+    err := c.Bind(&category)
     if err != nil {
         fmt.Println(err)
         return
     }
 
-    result := models.Event{}
+    result := models.Categories{}
     for _, v := range data {
         if v.Id == id {
             result = v
@@ -184,83 +179,23 @@ func UpdateEvent(c *gin.Context) {
     if result.Id == 0 {
         c.JSON(http.StatusNotFound, lib.Message{
             Success: false,
-            Message: "event with id " + param + " not found",
+            Message: "category with id " + param + " not found",
         })
         return
     }
 
-    idEvent := 0
+    idCategory := 0
     for _, v := range data {
-        idEvent = v.Id
+        idCategory = v.Id
     }
-    event.Id = idEvent
-    
+    category.Id = idCategory
+
+    // models.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)
+
     c.JSON(http.StatusOK, lib.Message{
         Success: true,
         Message: "Event  id " + param + " edit Success",
-        ResultsInfo: totalInfo,
-        Results:event,
+		ResultsInfo: totalInfo,
+        Results:category,
     })
 }
-
-func DetailEventSections(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	data := models.FindSectionsByEvent(id)
-	fmt.Println(id)
-
-	if data.Id == id {
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "events sections Found",
-			Results: data,
-		})
-		return
-	} else {
-		c.JSON(http.StatusNotFound, lib.Message{
-			Success: false,
-			Message: "events sections Not Found",
-		})
-	}
-}
-func ListAllPaymentMethod(c *gin.Context){
-    search := c.Query("search")
-    page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	
-	if page < 1 {
-        page = 1
-	}
-	if limit < 1 {
-        limit = 5
-	}
-    if page > 1 {
-        page = (page - 1)*limit
-    }
-    listPayment,count := models.FindAllPaymentMethod(search,page,limit)
-
-    totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
-
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "success",
-            ResultsInfo: totalInfo,
-			Results: listPayment,
-		})	
-	}
-// models.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)

@@ -11,7 +11,6 @@ func tokenfiled(ctx *gin.Context){
 		ctx.JSON(http.StatusBadRequest, lib.Message{
 		Success:  false,
 		Message: "Unauthorized",
-	
 	})
 	ctx.Abort()
 	}

@@ -1,0 +1,1 @@
+TRUNCATE Table "payment_method"

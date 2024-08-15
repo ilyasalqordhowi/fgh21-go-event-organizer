@@ -1,4 +1,4 @@
 create table "nationalities"(
-    "id" serial primary key,
-    "name" varchar(80)
+"id" serial primary key,
+"name" varchar(80)
 );

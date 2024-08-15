@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -10,10 +11,42 @@ import (
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
 )
 func ListAllUsers(c *gin.Context){
-	listUsers := models.FindAllUsers()
+	search := c.Query("search")
+	page,_ := strconv.Atoi(c.Query("page"))
+	limit,_ := strconv.Atoi(c.Query("limit"))
+	
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 5
+	}
+	 if page > 1 {
+        page = (page - 1)*limit
+    }
+	listUsers,count := models.FindAllUsers(search,page,limit)
+		totalPage := math.Ceil(float64(count)/float64(limit))
+    next := 0 
+    prev := 0
+
+    if int(totalPage)> 1 {
+        next = int(totalPage) - page
+    }
+    if int(totalPage)> 1 {
+        prev = int(totalPage) - 1
+    }
+     totalInfo := lib.TotalInfo{
+        TotalData: count,
+        TotalPage: int(totalPage),
+        Page: page,
+        Limit: limit,
+        Next: next,
+        Prev: prev,
+    }
 		c.JSON(http.StatusOK, lib.Message{
 			Success: true,
 			Message: "success",
+			ResultsInfo: totalInfo,
 			Results: listUsers,
 		})		
 	}
@@ -89,9 +122,37 @@ func DeleteUsers(c *gin.Context){
 func Update(c *gin.Context) {
     param := c.Param("id")
     id,_  := strconv.Atoi(param)
-    data := models.FindAllUsers()
-	
+	search := c.Query("search")
+	page,_ := strconv.Atoi(c.Query("page"))
+	limit,_ := strconv.Atoi(c.Query("limit"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 5
+	}
+	if page > 1 {
+		page = (page - 1)*limit
+	}
+	data,count := models.FindAllUsers(search,page,limit)
+	totalPage := math.Ceil(float64(count)/float64(limit))
+    next := 0 
+    prev := 0
 
+    if int(totalPage)> 1 {
+        next = int(totalPage) - page
+    }
+    if int(totalPage)> 1 {
+        prev = int(totalPage) - 1
+    }
+     totalInfo := lib.TotalInfo{
+        TotalData: count,
+        TotalPage: int(totalPage),
+        Page: page,
+        Limit: limit,
+        Next: next,
+        Prev: prev,
+    }
     user := models.User{}
     err := c.Bind(&user)
     if err != nil {
@@ -125,6 +186,7 @@ func Update(c *gin.Context) {
     c.JSON(http.StatusOK, lib.Message{
         Success: true,
         Message: "user  id " + param + " edit Success",
+		ResultsInfo: totalInfo,
         Results: user,
     })
 }

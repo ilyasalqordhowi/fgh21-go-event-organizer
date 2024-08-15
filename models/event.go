@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/jackc/pgx/v5"
@@ -11,27 +12,42 @@ type Event struct {
 	Id            int`json:"id"`
 	Image       *string `json:"image" form:"image" db:"image"`
 	Title      *string `json:"title" form:"title" db:"title"`
-	Date     *int `json:"date" form:"date" db:"date"`
+	Date     time.Time `json:"date" form:"date" db:"date"`
 	Descriptions *string`json:"descriptions" form:"descriptions" db:"descriptions"`
 	LocationId *int `json:"locationId" form:"locationId" db:"location_id"`
-	CreateBy  int`json:"createBy" form:"createBy" db:"create_by"`
+	CreateBy  *int`json:"createBy" form:"createBy" db:"create_by"`
 }
-func FindAllEvent() []Event {
+
+
+func FindAllEvent(search string, page int,limit int) ([]Event,int) {
 	db := lib.DB()
 	defer db.Close(context.Background())
+	offset := (page - 1) * limit
 
-	rows, _ := db.Query(
-	context.Background(),
-	`SELECT * FROM "events"`)
+	sql :=	`SELECT * FROM "events" where "title" ilike '%' || $1 || '%' offset $2 limit $3`
+	rows, _ := db.Query(context.Background(),sql,search,offset,limit)
 	events, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Event])
 
 	fmt.Println(events)
 
+
 	if err != nil {
 		fmt.Println(err)
 	}
+	result := TotalEvent(search)
+	return events, result
+}
+func TotalEvent(search string)int{
+	db := lib.DB()
+	defer db.Close(context.Background())
 
-	return events
+	sql :=	`SELECT count(id) as "total" FROM "events" where "title" ilike '%' || $1 || '%'`
+	rows := db.QueryRow(context.Background(),sql,search)
+	var results int
+	rows.Scan(
+		&results,
+	)
+	return results
 }
 func FindOneEvent(id int) Event {
 	db := lib.DB()
@@ -95,3 +111,5 @@ func EditEvent(Image string, Title string, Date int,Descriptions string, Locatio
 
     db.Exec(context.Background(), dataSql, Image, Title, Date,Descriptions, LocationId, CreateBy, id)
 }
+
+

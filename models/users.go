@@ -15,13 +15,46 @@ type User struct {
 	Username *string `json:"username" form:"username" binding:"required" db:"username"`
 }
 
-func FindAllUsers() []User {
+
+func FindAllUsers(search string ,page int,limit int) ([]User,int) {
+	db := lib.DB()
+	defer db.Close(context.Background())
+	offset := (page - 1) * limit
+	
+	sql :=	`SELECT * FROM "users" where "email" ilike '%' || $1 || '%' offset $2 limit $3`
+	rows, _ := db.Query(context.Background(),sql,search,offset,limit)
+	
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
+
+	fmt.Println(users)
+	
+	if err != nil {
+		fmt.Println(err)
+	}
+	result := TotalUsers(search)
+	return users,result
+}
+func TotalUsers(search string)int{
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	sql :=	`SELECT count(id) as "total" FROM "users" where "email" ilike '%' || $1 || '%'`
+	rows := db.QueryRow(context.Background(),sql,search)
+	var results int
+	rows.Scan(
+		&results,
+	)
+	return results
+}
+func FindOneUser(id int) User {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
 	rows, _ := db.Query(
-	context.Background(),
-	`SELECT * FROM "users"`)
+		context.Background(),
+	`SELECT * FROM "users"`,
+)
+
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
 
 	fmt.Println(users)
@@ -29,26 +62,6 @@ func FindAllUsers() []User {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	return users
-}
-
-func FindOneUser(id int) User {
-	db := lib.DB()
-	defer db.Close(context.Background())
-
-	rows, _ := db.Query(
-	context.Background(),
-	`SELECT * FROM "users"`,
-	)
-
-	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
-
-	fmt.Println(users)
-
-	if err != nil {
-		fmt.Println(err)
-	} 
 	
 	user := User{}
 	for _, v := range users{
