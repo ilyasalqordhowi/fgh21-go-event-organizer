@@ -14,22 +14,17 @@ type EventSections struct{
 	Quantity string `json:"quantity"  db:"quantity"`
 	EventId int `json:"events_id" db:"events_id"`
 }
-func FindSectionsByEvent(id int) EventSections {
+func FindSectionsByEvent(id int) ([]EventSections,error) {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
 	rows, _ := db.Query(context.Background(),
-		`select * from "event_sections"`,
+		`select * from "event_sections" where "events_id" = $1`,id,
 	)
 	eventSection, err := pgx.CollectRows(rows, pgx.RowToStructByPos[EventSections])
 	if err != nil {
-		fmt.Println(err)
+		return nil,fmt.Errorf("Error")
 	}
-	dataSections := EventSections{}
-	for _, i := range eventSection {
-		if i.Id == id {
-			dataSections = i
-		}
-	}
-	return dataSections
+	
+	return eventSection,nil
 }

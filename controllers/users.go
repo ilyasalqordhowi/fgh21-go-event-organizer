@@ -190,3 +190,57 @@ func Update(c *gin.Context) {
         Results: user,
     })
 }
+func UpdatePassword(ctx *gin.Context) {
+	id := ctx.GetInt("userId")
+	user := models.FindOneUser(id)
+    found := models.FindOneUserByPassword(user.Password)
+	fmt.Println(found.Password,"oiiiiiiiiiii")
+	isVerified := lib.Verify(user.Password, found.Password)
+	fmt.Println(isVerified,"tezzzztttzztztztzt")
+	if isVerified {
+		ctx.JSON(http.StatusOK,
+			lib.Message{
+				Success: true,
+				Message: "Password success",
+			  })
+		  
+		}else{
+			
+			ctx.JSON(http.StatusBadRequest,
+		 lib.Message{
+			 Success: false,
+			 Message: "Password tidak sesuai",
+		 })
+		}
+	if user.Id == 0 {
+		ctx.JSON(http.StatusNotFound, lib.Message{
+			Success: false,
+			Message: "User not found",
+		})
+		return
+	}
+	
+	var dataPassword struct {
+		Password string `form:"password" binding:"required,min=8"`
+	}
+	if err := ctx.ShouldBind(&dataPassword); err != nil {
+		ctx.JSON(http.StatusBadRequest, lib.Message{
+			Success: false,
+			Message: "Invalid input data",
+		})
+		return
+	}
+	
+	if err := models.Updatepassword(dataPassword.Password, id); err != nil {
+		ctx.JSON(http.StatusInternalServerError, lib.Message{
+			Success: false,
+			Message: "Failed to update password",
+		})
+		return
+	}
+	
+	ctx.JSON(http.StatusOK, lib.Message{
+		Success: true,
+		Message: "Password successfully updated",
+	})
+}

@@ -27,14 +27,11 @@ func FindAllEvent(search string, page int,limit int) ([]Event,int) {
 	sql :=	`SELECT * FROM "events" where "title" ilike '%' || $1 || '%' offset $2 limit $3`
 	rows, _ := db.Query(context.Background(),sql,search,offset,limit)
 	events, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Event])
-
-	fmt.Println(events)
-
-
 	if err != nil {
 		fmt.Println(err)
 	}
 	result := TotalEvent(search)
+	fmt.Println(events)
 	return events, result
 }
 func TotalEvent(search string)int{

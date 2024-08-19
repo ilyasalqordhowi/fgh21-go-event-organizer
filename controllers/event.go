@@ -19,7 +19,7 @@ func ListAllEvent(c *gin.Context){
         page = 1
 	}
 	if limit < 1 {
-        limit = 5
+        limit = 10
 	}
     if page > 1 {
         page = (page - 1)*limit
@@ -138,7 +138,7 @@ func UpdateEvent(c *gin.Context) {
         page = 1
 	}
 	if limit < 1 {
-        limit = 5
+        limit = 10
 	}
      if page > 1 {
         page = (page - 1)*limit
@@ -205,22 +205,21 @@ func UpdateEvent(c *gin.Context) {
 
 func DetailEventSections(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data := models.FindSectionsByEvent(id)
+	data,err := models.FindSectionsByEvent(id)
 	fmt.Println(id)
 
-	if data.Id == id {
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "events sections Found",
-			Results: data,
-		})
-		return
-	} else {
-		c.JSON(http.StatusNotFound, lib.Message{
+    if err != nil {
+        c.JSON(http.StatusNotFound, lib.Message{
 			Success: false,
 			Message: "events sections Not Found",
 		})
-	}
+    }
+
+    c.JSON(http.StatusOK, lib.Message{
+        Success: true,
+        Message: "events sections Found",
+        Results: data,
+    })
 }
 func ListAllPaymentMethod(c *gin.Context){
     search := c.Query("search")
@@ -231,7 +230,7 @@ func ListAllPaymentMethod(c *gin.Context){
         page = 1
 	}
 	if limit < 1 {
-        limit = 5
+        limit = 10
 	}
     if page > 1 {
         page = (page - 1)*limit

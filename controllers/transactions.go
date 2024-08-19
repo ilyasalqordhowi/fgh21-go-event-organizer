@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,37 +9,61 @@ import (
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
 )
 
-// type FormTransaction struct {
-// 	EventId         int `form:"eventId"`
-// 	SectionId       []int `form:"sectionId"`
-// 	TicketQyt       []int `form:"ticketQyt"`
-// 	PaymentMethodId int `form:"paymentMethodId"`
+type FormTransactions struct{
+	EventId         	int `json:"eventId" form:"eventId" db:"event_id"`
+	PaymentMethodId 	int `json:"paymentMethodId" form:"paymentMethodId" db:"payment_method_id"`
+	SectionId       	[]int `json:"sectionId" form:"sectionId" db:"section_id"`
+	TicketQty       	[]int `json:"ticketQty" form:"ticketQty" db:"ticket_qty"`
+}
 
-// }
+func CreateTransaction(ctx *gin.Context) {
+	form := FormTransactions{}
 
-func CreateTransaction(c *gin.Context) {
-	newEvents := models.Transaction{}
-    id := c.GetInt("userId")
-    data , err := models.CreateTransaction(newEvents,id)
-    
-    if err := c.ShouldBind(&newEvents);
-	 err != nil {
-        c.JSON(http.StatusBadRequest, lib.Message{
-            Success: false,
-            Message: "Invalid input data",
+	if err := ctx.ShouldBind(&form); err != nil {
+		ctx.JSON(http.StatusBadRequest, lib.Message{
+			Success: false,
+			Message: "invalid input data",
+		})
+		return
+	}
+	fmt.Println(form,"testttt")
+
+  trx := models.CreateTransaction(models.Transaction{
+		UserId: ctx.GetInt("userId"),
+		PaymentMethodId: form.PaymentMethodId,
+		EventId: form.EventId,
+	})
+    for i := range form.SectionId{
+        models.CreateTransactionDetail(models.TransactionDetail{
+            SectionId: form.SectionId[i],
+			TicketQty: form.TicketQty[i],
+			TransactionId: trx.Id,
         })
-        return
     }
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, lib.Message{
-            Success: false,
-            Message: "Failed to create Profile",
-        })
-        return 
-    }
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "Events created successfully",
-        Results: data,
-    })
+
+	data,err := models.CreateDetailTransactions()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "not found",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, lib.Message{
+		Success: true,
+		Message: "Transaction created successfully",
+		Results: data,
+	})
+}
+
+func FindTransactionByUserId(ctx *gin.Context){
+	UserId := ctx.GetInt("userId")
+
+	detailTransactionbyId := models.FindOneTransactionById(UserId)
+
+	ctx.JSON(http.StatusOK, lib.Message{
+		Success: true,
+		Message: "Transaction User Id",
+		Results: detailTransactionbyId,
+	})
 }

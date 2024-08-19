@@ -13,4 +13,5 @@ func UserRouter(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/:id",controllers.DetailUsers)
 	routerGroup.PATCH("/:id",controllers.Update)
 	routerGroup.DELETE("/:id",controllers.DeleteUsers)
+	routerGroup.PATCH("/password",controllers.UpdatePassword)
 }	

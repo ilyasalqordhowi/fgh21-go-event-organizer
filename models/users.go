@@ -54,7 +54,6 @@ func FindOneUser(id int) User {
 		context.Background(),
 	`SELECT * FROM "users"`,
 )
-
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
 
 	fmt.Println(users)
@@ -74,28 +73,25 @@ func FindOneUser(id int) User {
 func FindOneUserByEmail(email string) User {
 	db := lib.DB()
 	defer db.Close(context.Background())
-
 	rows, _ := db.Query(
-	context.Background(),
-	`SELECT * FROM "users"`,
+		context.Background(),
+	 	`select * from "users" where "email" = $1`,
+		email,
 	)
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
 
-	fmt.Println(users)
-
 	if err != nil {
 		fmt.Println(err)
-	} 
-	
+	}
+
 	user := User{}
-	for _, v := range users{
-		if v.Email == email {
-			user = v
+	for _, val := range users {
+		if val.Email == email{
+			user = val
 		}
 	}
-	fmt.Println(user)
-	return user 	
+	return user	
 }
 
 func Create(newUser User) User {
@@ -142,4 +138,42 @@ func EditUser(email string, username string, password string, id string) {
     dataSql := `update "users" set (email , username, password) = ($1, $2, $3) where id=$4`
 
     db.Exec(context.Background(), dataSql, email, username, password, id)
+}
+
+func Updatepassword(password string, id int) error {
+	db := lib.DB()
+	defer db.Close(context.Background())
+	dataPassword := lib.Encrypt(password)
+	
+
+	dataSql := `UPDATE "users" SET password = $1 WHERE id = $2`
+	_, err := db.Exec(context.Background(), dataSql, dataPassword, id)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %v", err)
+	}
+
+	return nil
+}
+func FindOneUserByPassword(password string) User {
+	db := lib.DB()
+	defer db.Close(context.Background())
+	rows, _ := db.Query(
+		context.Background(),
+	 	`select * from "users" where "password" = $1`,
+		password,
+	)
+
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	user := User{}
+	for _, val := range users {
+		if val.Password == password{
+			user = val
+		}
+	}
+	return user	
 }

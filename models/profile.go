@@ -10,7 +10,7 @@ import (
 type Profile struct {
 	Id            int    `json:"id"`
 	Picture       *string `json:"picture" form:"picture" db:"picture"`
-	FullName      string `json:"fullName" form:"fullName" db:"full_name"`
+	FullName      string `json:"full_name" form:"full_name" db:"full_name"`
 	Birthdate     *string `json:"birtdate" form:"birthdate" db:"birth_date"`
 	Gender        *int    `json:"gender" form:"gender" db:"gender"`
 	PhoneNumber   *string `json:"phoneNumber" form:"phoneNumber" db:"phone_number"`
@@ -23,6 +23,10 @@ type JoinRegist struct {
     Email    *string `json:"email" form:"email" db:"email"`
     Password string `json:"-" form:"password" db:"password"`
     Results  Profile
+}
+type Nationality struct{
+    Id int `json:"id"`
+    Name string `json:"nationalities" db:"name"`
 }
 
 func CreateProfile(joinRegist JoinRegist) ( *Profile , error) {
@@ -62,25 +66,73 @@ func CreateProfile(joinRegist JoinRegist) ( *Profile , error) {
     if err != nil {
         return nil, fmt.Errorf("failed to insert into profile table: %v", err)
     }
-
+    fmt.Println(&profile,"masuk")
     return &profile, nil
 }
-func FindOneProfile(id int) Profile {
-    db := lib.DB()
+func FindOneProfile(id int) []Profile {
+   db := lib.DB()
+	defer db.Close(context.Background())
+
+	rows, _ := db.Query(context.Background(),
+		`select * from "profile" where "user_id" = $1`, id,
+	)
+	profile, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Profile])
+	fmt.Println(err)
+	if err != nil {
+
+		fmt.Println(err)
+
+	}
+	fmt.Println(profile)
+
+	return profile
+}
+
+func FindAllProfile() []Profile {
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	rows, _ := db.Query(context.Background(),
+		`select * from "profile" order by "id" asc`,
+	)
+	profile, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Profile])
+	if err != nil {
+		fmt.Println(err)
+	}
+	return profile
+}
+func EditProfile(Picture string, FullName string, Birthdate string ,Gender int,PhoneNumber string, Profession string, NationalityId int,UserId int) {
+	db := lib.DB()
     defer db.Close(context.Background())
 
-    rows,_ := db.Query(context.Background(),
-        `select * from "profile"`,
-    )
-    profile, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Profile])
-    if err != nil {
-        fmt.Println(err)
-    }
-    dataProfile := Profile{}
-    for _, i := range profile {
-        if i.Id == id {
-            dataProfile = i
-        }
-    }
-    return dataProfile
+    dataSql := `update "events" set ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id", "user_id") = ($1, $2, $3, $4, $5, $6, $7, $8) where "id" = $8`
+	
+    db.Exec(context.Background(), dataSql,Picture, FullName, Birthdate, Gender,PhoneNumber, Profession, NationalityId, UserId)
 }
+func FindAllNational() []Nationality {
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	rows, _ := db.Query(context.Background(),
+		`select * from "nationalities" order by "id" asc`,
+	)
+	national, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Nationality])
+	if err != nil {
+		fmt.Println(err)
+	}
+	return national
+}
+	func FindOneNational(id int) []Nationality {
+		db := lib.DB()
+		defer db.Close(context.Background())
+	
+		rows, _ := db.Query(context.Background(),
+			`select * from "nationalities" where "id" = $1`,id,
+		)
+		nationality, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Nationality])
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(nationality)
+		return nationality
+	}
