@@ -19,7 +19,7 @@ func ListAllEvent(c *gin.Context){
         page = 1
 	}
 	if limit < 1 {
-        limit = 10
+        limit = 1000
 	}
     if page > 1 {
         page = (page - 1)*limit
@@ -70,34 +70,89 @@ func DetailEvent(c *gin.Context) {
 		})
 	}
 }
-func CreateEvent(c *gin.Context) {
-    newEvents := models.Event{}
-    id, _ := c.Get("userId")
-    err := models.CreateEvent(newEvents, id.(int))
-    
-    if err := c.ShouldBind(&newEvents); err != nil {
-        c.JSON(http.StatusBadRequest, lib.Message{
+func DetailCreateEvent(c *gin.Context) {
+    id := c.GetInt("userId")
+    fmt.Println(id)
+    dataEvent := models.FindOneByEvent(id)
+
+    c.JSON(http.StatusOK, lib.Message{
+        Success: true,
+        Message: "Event Found",
+        Results: dataEvent,
+    })
+
+}
+func CreateEvent(ctx *gin.Context) {
+    var newEvent models.Event
+    id, exists := ctx.Get("userId")
+    fmt.Println(newEvent)
+    if !exists {
+        ctx.JSON(http.StatusUnauthorized, lib.Message{
+            Success: false,
+            Message: "Unauthorized",
+        })
+        return
+    }
+
+    userId, ok := id.(int)
+    if !ok {
+        ctx.JSON(http.StatusInternalServerError, lib.Message{
+            Success: false,
+            Message: "Invalid user ID",
+        })
+        return
+    }
+
+    // Bind input data ke struct event
+    if err := ctx.ShouldBind(&newEvent); err != nil {
+        ctx.JSON(http.StatusBadRequest, lib.Message{
             Success: false,
             Message: "Invalid input data",
         })
         return
     }
+
+    err := models.CreateEvents(newEvent, userId)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, lib.Message{
+        ctx.JSON(http.StatusInternalServerError, lib.Message{
             Success: false,
-            Message: "Failed to create Profile",
+            Message: "Failed to create event",
         })
         return
     }
-    
-    // newEvents.CreateBy = id.(int)
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "Events created successfully",
-        Results: newEvents,
-    })
 
+    newEvent.CreateBy = &userId
+
+    ctx.JSON(http.StatusOK, lib.Message{
+        Success: true,
+        Message: "Event created successfully",
+        Results: newEvent,
+    })
 }
+// func CreateEvent(c *gin.Context) {
+//     event := models.Event{}
+
+//     if err := c.ShouldBind(&event); err != nil {
+//         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//         return
+//     }
+//     id, _ := c.Get("userId")
+//     result, err := models.CreateEvent(event, id.(int))
+//     if err != nil {
+//         c.JSON(http.StatusInternalServerError, lib.Message{
+//             Success: false,
+//             Message: err.Error(),
+//         })
+//         return
+//     }
+//     event.CreateBy = id.(int)
+//     c.JSON(http.StatusOK, lib.Message{
+//         Success: true,
+//         Message: "Event created successfully",
+//         Results: result,
+//     })
+
+// }
 func DeleteEvent(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
 	dataEvent := models.FindOneEvent(id)

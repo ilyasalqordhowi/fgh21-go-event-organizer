@@ -91,3 +91,48 @@ func ListAllNational(r *gin.Context) {
 		Results: results,
 	})
 }
+func UpdateProfile(c *gin.Context) {
+	id := c.GetInt("userId")
+	var form models.Profile
+	var  user models.User
+	err := c.Bind(&form)
+	errUser := c.Bind(&user)
+	data := models.FindOneProfile(id)
+	dataProfile := models.FindOneUser(id)
+	if err := c.ShouldBind(&form); err != nil {
+        c.JSON(http.StatusBadRequest, lib.Message{
+            Success: false,
+            Message: "Invalid input data",
+        })
+
+        return
+    }
+    fmt.Println(errUser)
+	if err != nil {
+        c.JSON(http.StatusBadRequest, lib.Message{
+            Success: false,
+            Message: "Failed to update profile",
+        })
+        return
+    }
+		if errUser != nil {
+			c.JSON(http.StatusBadRequest,
+				lib.Message{
+					Success: false,
+					Message: "failed user",
+				})
+				return
+			}
+
+			models.EditProfile(form,id)
+			models.UpdateUsername(user,id)
+			c.JSON(http.StatusOK, lib.Message{
+				Success: true,
+				Message: "Profile Found",
+				Results: gin.H{
+					"profile": data,
+					"user":    dataProfile,
+				},
+			})
+				
+			}

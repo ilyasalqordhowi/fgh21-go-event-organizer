@@ -12,4 +12,5 @@ func ProfileRouter(r *gin.RouterGroup){
 	r.GET("/national", controllers.ListAllNational)
 	r.Use(middlewares.AuthMiddleware())
 	r.GET("/",controllers.DetailusersProfile)
+	r.PATCH("/update",controllers.UpdateProfile)
 }

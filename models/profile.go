@@ -13,7 +13,7 @@ type Profile struct {
 	FullName      string `json:"full_name" form:"full_name" db:"full_name"`
 	Birthdate     *string `json:"birtdate" form:"birthdate" db:"birth_date"`
 	Gender        *int    `json:"gender" form:"gender" db:"gender"`
-	PhoneNumber   *string `json:"phoneNumber" form:"phoneNumber" db:"phone_number"`
+	PhoneNumber   *string `json:"phoneNumber" form:"phone_number" db:"phone_number"`
 	Profession    *string `json:"profession" form:"profession" db:"profession"`
 	NationalityId *int `json:"nationalityId" form:"nationalityId" db:"nationality_id"`
 	UserId        int `json:"userId" form:"userId" db:"user_id"`
@@ -101,13 +101,13 @@ func FindAllProfile() []Profile {
 	}
 	return profile
 }
-func EditProfile(Picture string, FullName string, Birthdate string ,Gender int,PhoneNumber string, Profession string, NationalityId int,UserId int) {
+func EditProfile(data Profile, Id int) error{
 	db := lib.DB()
     defer db.Close(context.Background())
 
-    dataSql := `update "events" set ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id", "user_id") = ($1, $2, $3, $4, $5, $6, $7, $8) where "id" = $8`
-	
-    db.Exec(context.Background(), dataSql,Picture, FullName, Birthdate, Gender,PhoneNumber, Profession, NationalityId, UserId)
+    dataSql := `update "profile" set ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id") = ($1, $2, $3, $4, $5, $6, $7) where "user_id" = $8`
+    db.Exec(context.Background(), dataSql,data.Picture, data.FullName, data.Birthdate, data.Gender, data.PhoneNumber, data.Profession, data.NationalityId, Id)
+	return nil
 }
 func FindAllNational() []Nationality {
 	db := lib.DB()

@@ -11,8 +11,12 @@ import (
 type User struct {
 	Id       int    `json:"id"`
 	Email    string `json:"email" form:"email" binding:"required,email" db:"email"`
-	Password string `json:"-" form:"password" binding:"required,min=8" db:"password"`
-	Username *string `json:"username" form:"username" binding:"required" db:"username"`
+	Password string `json:"-" form:"password"  db:"password"`
+	Username *string `json:"username" form:"username" db:"username"`
+}
+type ChangePassword struct{
+	OldPassword string `form:"oldPassword" json:"oldPassword"`
+	NewPassword string `form:"newPassword" json:"newPassword"`
 }
 
 
@@ -148,32 +152,33 @@ func Updatepassword(password string, id int) error {
 
 	dataSql := `UPDATE "users" SET password = $1 WHERE id = $2`
 	_, err := db.Exec(context.Background(), dataSql, dataPassword, id)
+	fmt.Println(dataSql,"halo")
 	if err != nil {
 		return fmt.Errorf("failed to update password: %v", err)
 	}
-
 	return nil
 }
-func FindOneUserByPassword(password string) User {
+func FindOneUserByPassword(id int) ChangePassword {
 	db := lib.DB()
 	defer db.Close(context.Background())
-	rows, _ := db.Query(
-		context.Background(),
-	 	`select * from "users" where "password" = $1`,
-		password,
-	)
-
-	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
-
+   
+	var cp ChangePassword
+	err := db.QueryRow(context.Background(), `select password from "users" where id = $1`, id).Scan(&cp.OldPassword)
 	if err != nil {
 		fmt.Println(err)
 	}
+   
+	return cp
+   }
+   func UpdateUsername(dataUser User, Id int) error{
+	db := lib.DB()
+	defer db.Close(context.Background())
 
-	user := User{}
-	for _, val := range users {
-		if val.Password == password{
-			user = val
-		}
-	}
-	return user	
+	dataSql := `update "users" set ("email","username") = ($1,$2) where id= $3`
+	_,err := db.Exec(context.Background(), dataSql, dataUser.Email, dataUser.Username, Id)
+if  err != nil {
+	return fmt.Errorf("failed %v",err)
 }
+	return nil
+}
+   

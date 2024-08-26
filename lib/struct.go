@@ -1,10 +1,10 @@
 package lib
 
 type Message struct {
-	Success     bool   `json:"success"`
-	Message     string `json:"message"`
-	ResultsInfo TotalInfo
-	Results     any `json:"results,omitempty"`
+	Success     bool      `json:"success"`
+	Message     string    `json:"message"`
+	ResultsInfo TotalInfo `json:"resultsInfo,omitempty"`
+	Results     any       `json:"results,omitempty"`
 }
 type TotalInfo struct {
 	TotalData int `json:"totalData"`
