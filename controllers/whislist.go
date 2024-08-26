@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,11 +18,11 @@ func ListAllWishlist(r *gin.Context) {
 		Message: "List All Wishlist",
 		Results: results,
 	})
+	fmt.Println(results)
 }
 func ListOneWishlist(ctx *gin.Context) {
 
 	id := ctx.GetInt("userId")
-
 	
 	wishlistItems, err := models.FindOneWishlist(id)
 	if err != nil {
@@ -54,9 +55,10 @@ func ListOneWishlist(ctx *gin.Context) {
 
 
 		results = append(results, gin.H{
-			"wishlist": wishlist,
-			"event":    event,
+			"whislist": wishlist,
+			"events":    event,
 		})
+		fmt.Println(results,"ini")
 	}
 
 	

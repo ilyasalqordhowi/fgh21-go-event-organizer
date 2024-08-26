@@ -26,6 +26,7 @@ func FindAllWishlist() []Wishlist {
 	if err != nil {
 		fmt.Println(err)
 	}
+	
 	return dataWhislist
 }
 func FindOneWishlist(id int) ([]Wishlist, error) {

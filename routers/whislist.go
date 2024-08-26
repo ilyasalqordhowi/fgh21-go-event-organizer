@@ -9,8 +9,8 @@ import (
 func WhislistRouter(routerGroup *gin.RouterGroup) {
 	routerGroup.Use(middlewares.AuthMiddleware())
 	routerGroup.GET("/",controllers.ListAllWishlist)
-	routerGroup.GET("/:id",controllers.ListOneWishlist)
 	routerGroup.POST("/:id",controllers.Createwishlist)
+	routerGroup.GET("/:id",controllers.ListOneWishlist)
 	routerGroup.DELETE("/:id",controllers.DeleteUsers)
 
 }	
