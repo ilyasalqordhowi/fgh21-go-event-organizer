@@ -14,7 +14,8 @@ type Wishlist struct {
 	Event_id int `json:"event_id" form:"event_id"`
 }
 
-func FindAllWishlist() []Wishlist {
+
+func FindAllwishlist() []Wishlist {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
@@ -22,34 +23,33 @@ func FindAllWishlist() []Wishlist {
 		`select * from "whislist" order by "id" asc`,
 	)
 
-	dataWhislist, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Wishlist])
+	wishlists, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Wishlist])
 	if err != nil {
 		fmt.Println(err)
 	}
-	
-	return dataWhislist
+	return wishlists
 }
-func FindOneWishlist(id int) ([]Wishlist, error) {
+func FindOnewishlist(id int) ([]Wishlist, error) {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
-	
+
 	rows, err := db.Query(context.Background(),
 		`SELECT * FROM "whislist" WHERE "user_id" = $1 ORDER BY "id" ASC`, id,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query wishlist: %w", err)
+		return nil, fmt.Errorf("failed to query whislist: %w", err)
 	}
 	defer rows.Close() 
 	wishlists, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Wishlist])
 	if err != nil {
-		return nil, fmt.Errorf("failed to collect wishlist rows: %w", err)
+		return nil, fmt.Errorf("failed to collect whislist rows: %w", err)
 	}
 
 
 	return wishlists, nil
 }
-func CreateWishlist(event_id int, id int) error {
+func Createwishlist(event_id int, id int) error {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
@@ -61,11 +61,11 @@ func CreateWishlist(event_id int, id int) error {
 	).Scan(&exists)
 
 	if err != nil {
-		return fmt.Errorf("failed to check existing wishlist entry: %w", err)
+		return fmt.Errorf("failed to check existing whislist entry: %w", err)
 	}
 
 	if exists {
-		return fmt.Errorf("wishlist entry already exists")
+		return fmt.Errorf("whislist entry already exists")
 	}
 
 	_, err = db.Exec(
@@ -80,7 +80,7 @@ func CreateWishlist(event_id int, id int) error {
 
 	return nil
 }
-func FindOneEventById(event_id int) (Event, error) {
+func FindOneeventsbyid(event_id int) (Event, error) {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
@@ -107,11 +107,11 @@ func Deletewishlist(user_id int, event_id int) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to delete wishlist item: %w", err)
+		return fmt.Errorf("failed to delete whislist item: %w", err)
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("wishlist item not found")
+		return fmt.Errorf("whislist item not found")
 	}
 
 	return nil

@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/jackc/pgx/v5"
@@ -12,7 +11,7 @@ import (
 type Transaction struct{
 	Id int `json:"id"`
 	EventId int `json:"eventId" db:"event_id"`
-	PaymentMethodId int `json:"payment_method" db:"payment_method_id"`
+	PaymentMethodId int `json:"payment_method_id" db:"payment_method_id"`
 	UserId int `json:"userId" db:"user_id"`
 }
 type DetailTransaction struct {
@@ -20,9 +19,9 @@ type DetailTransaction struct {
 	FullName      string   `json:"fullName" db:"full_name"`
 	Title         string   `json:"title"  db:"event_title"`
 	LocationId    *int      `json:"locationId"  db:"location_id"`
-	Date          time.Time `json:"date"  db:"date"`
+	Date          string `json:"date"  db:"date"`
 	PaymentMethod string   `json:"paymentMethod"  db:"payment_method_id"`
-	Section		[]string `json:"section_name" db:"name"`
+	Section		[]string `json:"section_name" db:"section_id"`
 	TicketQyt 	[]int `json:"ticketQyt" db:"ticket_qty"`
 }
 func CreateTransaction(data Transaction) Transaction {
@@ -45,7 +44,7 @@ db := lib.DB()
 func FindOneTransactionById(id int) Transaction {
 	db := lib.DB()
 	defer db.Close(context.Background())
-	rows, _ := db.Query(context.Background(), `select * from "transactions" where "id" = $1`,
+	rows, _ := db.Query(context.Background(), `select * from "transactions" where "user_id" = $1`,
 		id,
 	)
 	categories, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Transaction])
@@ -60,6 +59,7 @@ func FindOneTransactionById(id int) Transaction {
 			category = item
 		}
 	}
+	fmt.Println(category,"mskmksmkmkmxk")
 	return category
 }
 func CreateDetailTransactions()([]DetailTransaction,error){

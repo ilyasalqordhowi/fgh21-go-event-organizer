@@ -8,5 +8,6 @@ import (
 
 func TransactionRouter(r *gin.RouterGroup) {
 	r.Use(middlewares.AuthMiddleware())
+	r.GET("/",controllers.FindTransactionByUserId)
 	r.POST("", controllers.CreateTransaction)
 }
