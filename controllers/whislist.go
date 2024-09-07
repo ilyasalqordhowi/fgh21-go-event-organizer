@@ -41,26 +41,26 @@ func ListOneWishlist(ctx *gin.Context) {
 		return
 	}
 
-	// Prepare the response: List of wishlist items and their associated events
+
 	var results []gin.H
 
 	for _, wishlist := range wishlistItems {
-		// Fetch event details for each wishlist item using the event_id
+
 		event, err := models.FindOneeventsbyid(wishlist.Event_id)
 		if err != nil {
-			// Log the error and continue to the next event (don't stop the loop)
+		
 			log.Printf("Failed to fetch event with id %d: %v", wishlist.Event_id, err)
 			continue
 		}
 
-		// Add the wishlist item and event details to the results
+
 		results = append(results, gin.H{
 			"whislist": wishlist,
 			"event":    event,
 		})
 	}
 
-	// Return the combined wishlist and event details
+
 	ctx.JSON(http.StatusOK, lib.Message{
 		Success: true,
 		Message: "Whislist and events found",
@@ -131,10 +131,10 @@ func CreateWishListEvent(ctx *gin.Context) {
 	})
 }
 func DeleteWishlist(ctx *gin.Context) {
-	// Get the user ID from the context
+
 	user_id := ctx.GetInt("userId")
 
-	// Get the event ID from the URL parameters
+
 	event_id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, lib.Message{
@@ -144,7 +144,7 @@ func DeleteWishlist(ctx *gin.Context) {
 		return
 	}
 
-	// Call the model function to delete the wishlist item
+
 	err = models.Deletewishlist(user_id, event_id)
 	if err != nil {
 		if err.Error() == "whislist item not found" {
@@ -162,7 +162,6 @@ func DeleteWishlist(ctx *gin.Context) {
 		return
 	}
 
-	// Return success response
 	ctx.JSON(http.StatusOK, lib.Message{
 		Success: true,
 		Message: "Whislist item deleted successfully",

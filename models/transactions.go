@@ -40,6 +40,7 @@ db := lib.DB()
 	)
 	fmt.Println(results,"0iiiiiii")
 	return results
+	
 }
 func FindOneTransactionById(id int) Transaction {
 	db := lib.DB()
@@ -74,7 +75,7 @@ func CreateDetailTransactions()([]DetailTransaction,error){
     join "payment_method" "pm" on "pm"."id" = "t"."payment_method_id"
     join "transactions_details" "td" on "td"."transaction_id" = "t"."id"
     join "event_sections" "es" on "es"."id" = "td"."section_id"
-    group by  "t"."id", "p"."full_name", "e"."title", "e"."location_id", "e"."date", "pm"."name";`
+    group by  "t"."id", "p"."full_name", "e"."title", "e"."location_id", "e"."date", "pm"."name"`
 send, _ := db.Query(
 		context.Background(),
 		sql,
