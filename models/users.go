@@ -11,7 +11,7 @@ import (
 type User struct {
 	Id       int    `json:"id"`
 	Email    string `json:"email" form:"email" binding:"required,email" db:"email"`
-	Password string `json:"-" form:"password"  db:"password"`
+	Password string `json:"-" form:"password" db:"password"`
 	Username *string `json:"username" form:"username" db:"username"`
 }
 type ChangePassword struct{
@@ -144,12 +144,12 @@ func EditUser(email string, username string, password string, id string) {
     db.Exec(context.Background(), dataSql, email, username, password, id)
 }
 
-func Updatepassword(password string, id int) error {
+func UpdatePassword(password string, id int) error {
 	db := lib.DB()
 	defer db.Close(context.Background())
+
 	dataPassword := lib.Encrypt(password)
 	
-
 	dataSql := `UPDATE "users" SET password = $1 WHERE id = $2`
 	_, err := db.Exec(context.Background(), dataSql, dataPassword, id)
 	fmt.Println(dataSql,"halo")

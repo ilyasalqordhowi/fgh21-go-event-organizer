@@ -33,6 +33,7 @@ func FindAllEvent(search string, page int,limit int) ([]Event,int) {
 	fmt.Println(events)
 	return events, result
 }
+
 func TotalEvent(search string)int{
 	db := lib.DB()
 	defer db.Close(context.Background())
@@ -98,26 +99,6 @@ func CreateEvents(event Event, id int) error {
     }
     return nil
 }
-// func CreateEvent(event Event, id int) (*Event,error){
-// 	db := lib.DB()
-// 	defer db.Close(context.Background())
-
-// 	var events Event
-//     err := db.QueryRow(
-//         context.Background(),
-//         `insert into "events" ("image", "title", "date", "descriptions", "location_id", "created_by") values ($1, $2, $3, $4, $5, $6) returning "id", "image", "title", "date", "descriptions", "location_id", "created_by",`,
-//         event.Image, event.Title, event.Date, event.Descriptions, event.LocationId, id,
-//     ).Scan(
-//         &events.Id, &events.Image, &events.Title, &events.Date, &events.Descriptions, &events.LocationId, &events.CreateBy,
-//     )
-
-//     fmt.Println(err)
-//     if err != nil {
-//         return nil, fmt.Errorf("failed to execute insert")
-//     }
-
-//     return &events, nil
-// }
 func CreateEvent(event Event, id int) error {
     db := lib.DB()
     defer db.Close(context.Background())

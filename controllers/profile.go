@@ -3,9 +3,14 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
 )
@@ -21,7 +26,7 @@ func CreateProfile(ctx *gin.Context) {
 		  ctx.JSON(http.StatusBadRequest,
         lib.Message{
             Success: false,
-            Message: "Password harus diisi",
+            Message: "Password bad request",
             
         })
 		return
@@ -30,7 +35,7 @@ func CreateProfile(ctx *gin.Context) {
 		  ctx.JSON(http.StatusBadRequest,
         lib.Message{
             Success: false,
-            Message: "data harus diisi",
+            Message: "Data bad request",
             
         })
 		return
@@ -58,7 +63,7 @@ func ListAllProfile(r *gin.Context) {
 		Results: results,
 	})
 }
-func DetailusersProfile(ctx *gin.Context) {
+func DetailUsersProfile(ctx *gin.Context) {
 	id := ctx.GetInt("userId")
 	data := models.FindOneProfile(id)
 	dataProfile := models.FindOneUser(id)
@@ -136,3 +141,78 @@ func UpdateProfile(c *gin.Context) {
 			})
 				
 			}
+func UploadProfileImage(c *gin.Context) {
+				id := c.GetInt("userId")
+			
+				maxFile := 500 * 1024
+				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
+			
+				file, err := c.FormFile("profileImg")
+				if err != nil {
+					if err.Error() == "http: request body too large" {
+						c.JSON(http.StatusRequestEntityTooLarge, lib.Message{
+							Success: false,
+							Message: "file size too large, max capacity 500 kb",
+							
+						})
+						return
+					}
+					c.JSON(http.StatusBadRequest,lib.Message{
+						Success: false,
+						Message: "not file to upload",
+					})
+					return
+				}
+				if id == 0 {
+					c.JSON(http.StatusBadRequest ,lib.Message{
+						Success: false,
+						Message: "User not found",
+					})
+					return
+				}
+			
+				allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
+				fileExt := strings.ToLower(filepath.Ext(file.Filename))
+				if !allowExt[fileExt] {
+					c.JSON(http.StatusBadRequest ,lib.Message{
+						Success: false,
+						Message: "extension file not validate",
+					})
+					return
+				}
+			
+				newFile := uuid.New().String() + fileExt
+			
+				uploadDir := "./img/profile/"
+				if err := c.SaveUploadedFile(file, uploadDir+newFile); err != nil {
+					c.JSON(http.StatusBadRequest , lib.Message{
+						Success: false,
+						Message: "upload failed",
+					})
+					return
+				}
+			
+				tes := "http://localhost:8888/img/profile/" + newFile
+			
+				delImgBefore := models.FindOneProfile(id)
+				if len(delImgBefore) > 0 && delImgBefore[0].Picture != nil {
+				   fileDel := strings.Split(*delImgBefore[0].Picture, "8000")[1]
+				   os.Remove("." + fileDel)
+				}
+			
+				profile, err := models.UpdateProfileImage(models.Profile{Picture: &tes}, id)
+				if err != nil {
+				c.JSON(http.StatusBadRequest , lib.Message{
+					Success: false,
+					Message: "upload failed",
+				})
+					return
+				}
+			
+				c.JSON(http.StatusOK ,lib.Message{
+					Success: true,
+					Message: "Upload success",
+					Results: profile,
+				})
+			}
+		

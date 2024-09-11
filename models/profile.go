@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
+
 	"github.com/jackc/pgx/v5"
 )
 type Profile struct {
@@ -135,4 +136,24 @@ func FindAllNational() []Nationality {
 		}
 		fmt.Println(nationality)
 		return nationality
+	}
+
+
+func UpdateProfileImage(data Profile,id int) (Profile,error) {
+		db := lib.DB()
+		defer db.Close(context.Background())
+	
+		sql := `UPDATE profile SET "picture" = $1 WHERE user_id=$2 returning *`
+	
+		row, err := db.Query(context.Background(), sql, data.Picture, id)
+		if err != nil {
+			return Profile{}, nil
+		}
+	
+		profile, err := pgx.CollectOneRow(row, pgx.RowToStructByName[Profile])
+		if err != nil {
+			return Profile{}, nil
+		}
+	
+		return profile, nil
 	}

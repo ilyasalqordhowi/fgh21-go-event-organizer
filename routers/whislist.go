@@ -11,6 +11,6 @@ func WhislistRouter(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/",controllers.ListAllWishlist)
 	routerGroup.POST("/:id",controllers.CreateWishListEvent)
 	routerGroup.GET("/:id",controllers.ListOneWishlist)
-	routerGroup.DELETE("/:id",controllers.DeleteUsers)
+	routerGroup.DELETE("/:id",controllers.DeleteWishlist)
 
 }	

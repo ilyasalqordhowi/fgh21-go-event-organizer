@@ -195,26 +195,33 @@ func UpdatePassword(ctx *gin.Context) {
 	var form models.ChangePassword
 	err := ctx.Bind(&form)
 	if err != nil {
-
 		fmt.Println(err)
 		return
 	}
     found := models.FindOneUserByPassword(id)
 
 	isVerified := lib.Verify(form.OldPassword,found.OldPassword)
-
-	fmt.Println(isVerified,"tezzzztttzztztztzt")
+	fmt.Println(isVerified)
 	if isVerified {
-		ctx.JSON(http.StatusOK,
-			lib.Message{
-				Success: true,
-				Message: "Password success",
-			  })
+		err := models.UpdatePassword(form.NewPassword, id)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest,
+				lib.Message{
+				Success: false,
+				Message: "Failed to update password",
+			})
+		} else {
+			ctx.JSON(http.StatusOK,
+				lib.Message{
+					Success: true,
+					Message: "Update password success",
+				  })
+		}
 		}else{
 			ctx.JSON(http.StatusBadRequest,
-		 lib.Message{
+		 	lib.Message{
 			 Success: false,
-			 Message: "Password tidak sesuai",
+			 Message: "Wrong Password",
 		 })
 		}
 

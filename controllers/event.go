@@ -129,30 +129,7 @@ func CreateEvent(ctx *gin.Context) {
         Results: newEvent,
     })
 }
-// func CreateEvent(c *gin.Context) {
-//     event := models.Event{}
 
-//     if err := c.ShouldBind(&event); err != nil {
-//         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//         return
-//     }
-//     id, _ := c.Get("userId")
-//     result, err := models.CreateEvent(event, id.(int))
-//     if err != nil {
-//         c.JSON(http.StatusInternalServerError, lib.Message{
-//             Success: false,
-//             Message: err.Error(),
-//         })
-//         return
-//     }
-//     event.CreateBy = id.(int)
-//     c.JSON(http.StatusOK, lib.Message{
-//         Success: true,
-//         Message: "Event created successfully",
-//         Results: result,
-//     })
-
-// }
 func DeleteEvent(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
 	dataEvent := models.FindOneEvent(id)
