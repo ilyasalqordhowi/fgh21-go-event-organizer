@@ -11,7 +11,7 @@ import (
 type Profile struct {
 	Id            int    `json:"id"`
 	Picture       *string `json:"picture" form:"picture" db:"picture"`
-	FullName      string `json:"full_name" form:"full_name" db:"full_name"`
+	FullName      string `json:"full_name"  binding:"required" form:"full_name" db:"full_name"`
 	Birthdate     *string `json:"birtdate" form:"birthdate" db:"birth_date"`
 	Gender        *int    `json:"gender" form:"gender" db:"gender"`
 	PhoneNumber   *string `json:"phoneNumber" form:"phone_number" db:"phone_number"`
@@ -21,8 +21,8 @@ type Profile struct {
 }
 type JoinRegist struct {
     Id       int    `json:"id"`
-    Email    *string `json:"email" form:"email" db:"email"`
-    Password string `json:"-" form:"password" db:"password"`
+    Email    *string `json:"email"  binding:"required,email" form:"email" db:"email"`
+    Password string `json:"-" form:"password"  binding:"required" db:"password"`
     Results  Profile
 }
 type Nationality struct{

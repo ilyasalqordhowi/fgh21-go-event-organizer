@@ -22,15 +22,6 @@ func CreateProfile(ctx *gin.Context) {
         return
     }
     profile, err := models.CreateProfile(account)
-	if account.Password == "" {
-		  ctx.JSON(http.StatusBadRequest,
-        lib.Message{
-            Success: false,
-            Message: "Password bad request",
-            
-        })
-		return
-	}
 	if *account.Email == "" && account.Password == "" && profile.FullName == ""{
 		  ctx.JSON(http.StatusBadRequest,
         lib.Message{

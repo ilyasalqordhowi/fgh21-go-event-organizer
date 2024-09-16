@@ -15,10 +15,8 @@ type Token struct{
 func AuthLogin(ctx *gin.Context) {
     var user models.User
     ctx.Bind(&user)
-
     found := models.FindOneUserByEmail(user.Email)
-    fmt.Println("berhasil")
-    fmt.Println(user)
+    fmt.Println(found)
     if found == (models.User{}) {
         ctx.JSON(http.StatusUnauthorized,
             lib.Message{
