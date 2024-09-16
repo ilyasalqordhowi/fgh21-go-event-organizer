@@ -63,6 +63,7 @@ func FindOneEvent(id int) Event {
 			dataEvent = i
 		}
 	}
+    
 	return dataEvent
 }
 func FindOneByEvent(id int) []Event {

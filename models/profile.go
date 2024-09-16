@@ -70,14 +70,14 @@ func CreateProfile(joinRegist JoinRegist) ( *Profile , error) {
     fmt.Println(&profile,"masuk")
     return &profile, nil
 }
-func FindOneProfile(id int) []Profile {
+func FindOneProfile(id int) Profile {
    db := lib.DB()
 	defer db.Close(context.Background())
 
 	rows, _ := db.Query(context.Background(),
 		`select * from "profile" where "user_id" = $1`, id,
 	)
-	profile, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Profile])
+	profile, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[Profile])
 	fmt.Println(err)
 	if err != nil {
 

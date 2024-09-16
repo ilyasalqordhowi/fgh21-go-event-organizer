@@ -66,7 +66,7 @@ func ListAllProfile(r *gin.Context) {
 func DetailUsersProfile(ctx *gin.Context) {
 	id := ctx.GetInt("userId")
 	data := models.FindOneProfile(id)
-	dataProfile := models.FindOneUser(id)
+	dataUser := models.FindOneUser(id)
 	fmt.Println(data,"helo")
 
 	ctx.JSON(http.StatusOK, lib.Message{
@@ -74,7 +74,7 @@ func DetailUsersProfile(ctx *gin.Context) {
 		Message: "Profile Found",
 		Results: gin.H{
 			"profile": data,
-			"user":    dataProfile,
+			"user":    dataUser,
 		},
 	})
 	
@@ -192,15 +192,17 @@ func UploadProfileImage(c *gin.Context) {
 					return
 				}
 			
-				tes := "http://localhost:8888/img/profile/" + newFile
+				dataImg := "http://localhost:8888/img/profile/" + newFile
 			
 				delImgBefore := models.FindOneProfile(id)
-				if len(delImgBefore) > 0 && delImgBefore[0].Picture != nil {
-				   fileDel := strings.Split(*delImgBefore[0].Picture, "8000")[1]
+				fmt.Println(delImgBefore.Picture,"kdkdkdkdkdkkkdkkkdk")
+				if delImgBefore.Picture != nil {
+				   fileDel := strings.Split(*delImgBefore.Picture, "8000")[1]
 				   os.Remove("." + fileDel)
+				  
 				}
 			
-				profile, err := models.UpdateProfileImage(models.Profile{Picture: &tes}, id)
+				profile, err := models.UpdateProfileImage(models.Profile{Picture: &dataImg}, id)
 				if err != nil {
 				c.JSON(http.StatusBadRequest , lib.Message{
 					Success: false,
