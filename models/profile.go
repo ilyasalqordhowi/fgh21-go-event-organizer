@@ -80,9 +80,7 @@ func FindOneProfile(id int) Profile {
 	profile, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[Profile])
 	fmt.Println(err)
 	if err != nil {
-
 		fmt.Println(err)
-
 	}
 	fmt.Println(profile)
 
