@@ -1,14 +1,14 @@
-FROM golang:1.23-alpine
+FROM golang:1.23.0
 
 WORKDIR /app
 
 COPY . /app/
 
-RUN go mod tidy && go build -o binary
+RUN go mod tidy
 
 EXPOSE 8888
 
-ENTRYPOINT ["/app/binary"]
+ENTRYPOINT go run main.go
 
 
 # FROM debian
