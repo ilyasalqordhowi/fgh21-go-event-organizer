@@ -32,7 +32,7 @@ type ResultDetail struct {
 	Date           string 	 `json:"date" form:"date" db:"date"`
 	PaymentId      string    `json:"PaymentId" form:"PaymentId" db:"payment_method_id"`
 	SectionName    []string  `json:"sectionName" form:"sectionName" db:"name"`
-	TicketQuantity []int     `json:"TicketQuantity" form:"TicketQuantity" db:"ticket_qty"`
+	TicketQuantity []int     `json:"TicketQuantity" form:"TicketQuantity" db:"tick	et_qty"`
 }
 func CreateNewTransactions(data Transaction) Transaction {
 	db := lib.DB()
@@ -73,11 +73,11 @@ func CreateTransactionDetail(data TransactionDetail) TransactionDetail {
 
 
 func DetailsTransaction(id int) ([]ResultDetail, error) {
-	db := lib.DB()
-	defer db.Close(context.Background())
+    db := lib.DB()
+    defer db.Close(context.Background())
 
-	sql :=
-		`select t.id, p.full_name, e.title as "event_title", e.location_id, e.date, pm.name as "payment_method",
+    sql :=
+        `select t.id, p.full_name, e.title as "event_title", e.location_id, e.date, pm.name as "payment_method",
         array_agg(es.name) as "section_name", array_agg(td.ticket_qty) as "ticket_qty"
         from "transactions" "t"
         join "users" "u" on u.id = t.user_id
@@ -86,16 +86,19 @@ func DetailsTransaction(id int) ([]ResultDetail, error) {
         join "payment_method" "pm" on pm.id = t.payment_method_id
         join "transactions_details" "td" on td.transaction_id = t.id
         join "event_sections" "es" on es.id = td.section_id
-        group by t.id, p.full_name, e.title, e.location_id, e.date, pm.name;`
+        where t.user_id = $1
+        group by t.id, p.full_name, e.title, e.location_id, e.date, pm.name`
 
-	send, _ := db.Query(
-		context.Background(),
-		sql,
-	)
+    send, _ := db.Query(
+        context.Background(),
+        sql,
+        id,
+    )
 
-	row, err := pgx.CollectRows(send, pgx.RowToStructByPos[ResultDetail])
-	if err != nil {
-		fmt.Println(err)
-	}
-	return row, err
+    row, err := pgx.CollectRows(send, pgx.RowToStructByPos[ResultDetail])
+    if err != nil {
+        fmt.Println(err)
+    }
+    return row, err
 }
+

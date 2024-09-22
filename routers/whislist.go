@@ -13,4 +13,4 @@ func WhislistRouter(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/:id",controllers.ListOneWishlist)
 	routerGroup.DELETE("/:id",controllers.DeleteWishlist)
 
-}	
+}
