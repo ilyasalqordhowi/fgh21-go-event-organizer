@@ -34,41 +34,68 @@ type ResultDetail struct {
 	SectionName    []string  `json:"sectionName" form:"sectionName" db:"name"`
 	TicketQuantity []int     `json:"TicketQuantity" form:"TicketQuantity" db:"tick	et_qty"`
 }
-func CreateNewTransactions(data Transaction) Transaction {
-	db := lib.DB()
-	defer db.Close(context.Background())
+func CreateNewTransactions(tx pgx.Tx,data Transaction) (Transaction, error) {
+    db := lib.DB()
+    defer db.Close(context.Background())
 
-	sql := `insert into "transactions" ("event_id", "payment_method_id", "user_id") values ($1, $2, $3) returning "id", "event_id", "payment_method_id", "user_id"`
-	row := db.QueryRow(context.Background(), sql, data.EventId, data.PaymentMethodId, data.UserId)
+ 
+    tx, err := db.BeginTx(context.Background(), pgx.TxOptions{})
+    if err != nil {
+        return Transaction{}, err 
+    }
 
-	var results Transaction
-	row.Scan(
-		&results.Id,
-		&results.EventId,
-		&results.PaymentMethodId,
-		&results.UserId,
-	)
-	fmt.Println(results,"hasil")
-	return results
+    sql := `insert into "transactions" ("event_id", "payment_method_id", "user_id") values ($1, $2, $3) returning "id", "event_id", "payment_method_id", "user_id"`
+    row := tx.QueryRow(context.Background(), sql, data.EventId, data.PaymentMethodId, data.UserId)
+
+    var results Transaction
+    err = row.Scan(
+        &results.Id,
+        &results.EventId,
+        &results.PaymentMethodId,
+        &results.UserId,
+    )
+    if err != nil {
+        return Transaction{}, err 
+    }
+
+    if commitErr := tx.Commit(context.Background()); commitErr != nil {
+        return Transaction{}, commitErr 
+    }
+
+    fmt.Println(results, "hasil")
+    return results, nil 
 }
 
-func CreateTransactionDetail(data TransactionDetail) TransactionDetail {
+
+func CreateTransactionDetail(tx pgx.Tx,data TransactionDetail) (TransactionDetail,error) {
 	db := lib.DB()
 	defer db.Close(context.Background())
+	tx, err := db.BeginTx(context.Background(), pgx.TxOptions{})
+    if err != nil {
+        return TransactionDetail{}, err 
+    }
 
- 	sql := `insert into "transactions_details" (transaction_id, section_id, ticket_qty) values ($1, $2, $3) returning "id", "transaction_id", "section_id", "ticket_qty"`
-	row := db.QueryRow(context.Background(), sql, data.TransactionId, data.SectionId, data.TicketQuantity)
+    sql := `insert into "transactions_details" (transaction_id, section_id, ticket_qty) values ($1, $2, $3) returning "id", "transaction_id", "section_id", "ticket_qty"`
+    row := tx.QueryRow(context.Background(), sql, data.TransactionId, data.SectionId, data.TicketQuantity)
 
-	var detail TransactionDetail
+    var detail TransactionDetail
+    err = row.Scan(
+        &detail.Id,
+        &detail.TransactionId,
+        &detail.SectionId,
+        &detail.TicketQuantity,
+    )
+    if err != nil {
+        tx.Rollback(context.Background()) 
+        return TransactionDetail{}, err 
+    }
 
-	row.Scan(
-		&detail.Id,
-		&detail.TransactionId,
-		&detail.SectionId,
-		&detail.TicketQuantity,
-	)
-	fmt.Println(detail,"detail")
-	return detail
+    if commitErr := tx.Commit(context.Background()); commitErr != nil {
+        return TransactionDetail{}, commitErr 
+    }
+
+    fmt.Println(detail, "detail")
+    return detail, nil
 }
 
 
