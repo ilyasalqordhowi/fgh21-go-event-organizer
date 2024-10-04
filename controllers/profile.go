@@ -135,10 +135,13 @@ func UpdateProfile(c *gin.Context) {
 func UploadProfileImage(c *gin.Context) {
 				id := c.GetInt("userId")
 			
-				maxFile := 1024 * 1024
+				maxFile := 100 * 1024 * 1024
 				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
-			
+	
 				file, err := c.FormFile("profileImg")
+				
+
+		
 				if err != nil {
 					if err.Error() == "http: request body too large" {
 						c.JSON(http.StatusRequestEntityTooLarge, lib.Message{
@@ -148,7 +151,7 @@ func UploadProfileImage(c *gin.Context) {
 						})
 						return
 					}
-					c.JSON(http.StatusBadRequest,lib.Message{
+					c.JSON(http.StatusBadRequest,lib.Message{	
 						Success: false,
 						Message: "not file to upload",
 					})

@@ -10,7 +10,7 @@ import (
 )
 type Profile struct {
 	Id            int    `json:"id"`
-	Picture       *string `json:"picture" form:"picture" db:"picture"`
+	Picture       *string `json:"picture"  db:"picture"`
 	FullName      string `json:"full_name"  binding:"required" form:"full_name" db:"full_name"`
 	Birthdate     *string `json:"birtdate" form:"birthdate" db:"birth_date"`
 	Gender        *int    `json:"gender" form:"gender" db:"gender"`
@@ -142,8 +142,9 @@ func UpdateProfileImage(data Profile,id int) (Profile,error) {
 		defer db.Close(context.Background())
 	
 		sql := `UPDATE profile SET "picture" = $1 WHERE user_id=$2 returning *`
-	
+		
 		row, err := db.Query(context.Background(), sql, data.Picture, id)
+		fmt.Println(row ,"ini modulnya")
 		if err != nil {
 			return Profile{}, nil
 		}
@@ -152,6 +153,5 @@ func UpdateProfileImage(data Profile,id int) (Profile,error) {
 		if err != nil {
 			return Profile{}, nil
 		}
-	
 		return profile, nil
 	}
