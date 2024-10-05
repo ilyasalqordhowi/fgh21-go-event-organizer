@@ -7,8 +7,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
-	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 func ListAllUsers(c *gin.Context){
 	search := c.Query("search")
@@ -19,12 +20,12 @@ func ListAllUsers(c *gin.Context){
 		page = 1
 	}
 	if limit < 1 {
-		limit = 5
+		limit = 10
 	}
 	 if page > 1 {
         page = (page - 1)*limit
     }
-	listUsers,count := models.FindAllUsers(search,page,limit)
+	listUsers,count := repository.FindAllUsers(search,page,limit)
 		totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
     prev := 0
@@ -52,7 +53,7 @@ func ListAllUsers(c *gin.Context){
 	}
 func DetailUsers(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data := models.FindOneUser(id)
+	data := repository.FindOneUser(id)
 	fmt.Println(id)
 
 	if data.Id == id {
@@ -70,7 +71,7 @@ func DetailUsers(c *gin.Context) {
 	}
 }
 func CreateUsers(c *gin.Context) {
-    newUser := models.User{}
+    newUser := dtos.User{}
 
     if err := c.ShouldBind(&newUser); 
 	err != nil {
@@ -81,7 +82,7 @@ func CreateUsers(c *gin.Context) {
         return
     }
 
-    addUser := models.Create(newUser)
+    addUser := repository.Create(newUser)
 	fmt.Println(addUser)
 	c.JSON(http.StatusOK, lib.Message{
 		Success:  true,
@@ -92,7 +93,7 @@ func CreateUsers(c *gin.Context) {
 }
 func DeleteUsers(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
-	dataUser := models.FindOneUser(id)
+	dataUser := repository.FindOneUser(id)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, lib.Message{
@@ -102,7 +103,7 @@ func DeleteUsers(c *gin.Context){
 		return
 	}
 
-	err = models.DeleteUsers(id)
+	err = repository.DeleteUsers(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, lib.Message{
 			Success:  false,
@@ -129,12 +130,12 @@ func Update(c *gin.Context) {
 		page = 1
 	}
 	if limit < 1 {
-		limit = 5
+		limit = 10
 	}
 	if page > 1 {
 		page = (page - 1)*limit
 	}
-	data,count := models.FindAllUsers(search,page,limit)
+	data,count := repository.FindAllUsers(search,page,limit)
 	totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
     prev := 0
@@ -153,14 +154,14 @@ func Update(c *gin.Context) {
         Next: next,
         Prev: prev,
     }
-    user := models.User{}
+    user := dtos.User{}
     err := c.Bind(&user)
     if err != nil {
         fmt.Println(err)
         return
     }
 
-    result := models.User{}
+    result := dtos.User{}
     for _, v := range data {
         if v.Id == id {
             result = v
@@ -181,7 +182,7 @@ func Update(c *gin.Context) {
     }
     user.Id = idUser
 
-    models.EditUser(user.Email, user.Password, *user.Username ,param)
+    repository.EditUser(user.Email, user.Password, *user.Username ,param)
 
     c.JSON(http.StatusOK, lib.Message{
         Success: true,
@@ -192,18 +193,18 @@ func Update(c *gin.Context) {
 }
 func UpdatePassword(ctx *gin.Context) {
 	id := ctx.GetInt("userId")
-	var form models.ChangePassword
+	var form dtos.ChangePassword
 	err := ctx.Bind(&form)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-    found := models.FindOneUserByPassword(id)
+    found := repository.FindOneUserByPassword(id)
 
 	isVerified := lib.Verify(form.OldPassword,found.OldPassword)
 	fmt.Println(isVerified)
 	if isVerified {
-		err := models.UpdatePassword(form.NewPassword, id)
+		err := repository.UpdatePassword(form.NewPassword, id)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest,
 				lib.Message{

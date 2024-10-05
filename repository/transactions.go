@@ -1,53 +1,33 @@
-package models
+package repository
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
 	"github.com/jackc/pgx/v5"
 )
 
-type Transaction struct{
-	Id 				int `json:"id"`
-	EventId 		int `json:"eventId" form:"event_id" db:"event_id"`
-	PaymentMethodId int `json:"payment_method_id" form:"payment_method_id" db:"payment_method_id"`
-	UserId 		  	int `json:"userId" db:"user_id"`
-	SectionId     	[]int `json:"sectionId" form:"section_id" db:"section_id"`
-	TicketQty     	[]int `json:"ticketQty" form:"ticket_qty" db:"ticket_qty"`
-}
 
-type TransactionDetail struct {
-	Id             int `json:"id"`
-	TransactionId  int `json:"transactionId" form:"transactionId" db:"transaction_id"`
-	SectionId      int `json:"sectionId" form:"sectionId" db:"section_id"`
-	TicketQuantity int `json:"ticketQuantity" form:"ticketQuantity" db:"ticket_qty"`
-}
 
-type ResultDetail struct {
-	Id             int       `json:"id"`
-	FullName       string    `json:"fullName" form:"fullName" db:"full_name"`
-	Title     	   string    `json:"eventTitle" form:"eventTitle" db:"title"`
-	LocationId     *int      `json:"location_id" form:"location_id" db:"location"`
-	Date           string 	 `json:"date" form:"date" db:"date"`
-	PaymentId      string    `json:"PaymentId" form:"PaymentId" db:"payment_method_id"`
-	SectionName    []string  `json:"sectionName" form:"sectionName" db:"name"`
-	TicketQuantity []int     `json:"TicketQuantity" form:"TicketQuantity" db:"tick	et_qty"`
-}
-func CreateNewTransactions(tx pgx.Tx,data Transaction) (Transaction, error) {
+
+
+func CreateNewTransactions(tx pgx.Tx,data dtos.Transaction) (dtos.Transaction, error) {
     db := lib.DB()
     defer db.Close(context.Background())
 
  
     tx, err := db.BeginTx(context.Background(), pgx.TxOptions{})
     if err != nil {
-        return Transaction{}, err 
+        return dtos.Transaction{}, err 
     }
 
     sql := `insert into "transactions" ("event_id", "payment_method_id", "user_id") values ($1, $2, $3) returning "id", "event_id", "payment_method_id", "user_id"`
     row := tx.QueryRow(context.Background(), sql, data.EventId, data.PaymentMethodId, data.UserId)
 
-    var results Transaction
+    var results dtos.Transaction
     err = row.Scan(
         &results.Id,
         &results.EventId,
@@ -55,11 +35,11 @@ func CreateNewTransactions(tx pgx.Tx,data Transaction) (Transaction, error) {
         &results.UserId,
     )
     if err != nil {
-        return Transaction{}, err 
+        return dtos.Transaction{}, err 
     }
 
     if commitErr := tx.Commit(context.Background()); commitErr != nil {
-        return Transaction{}, commitErr 
+        return dtos.Transaction{}, commitErr 
     }
 
     fmt.Println(results, "hasil")
@@ -67,18 +47,18 @@ func CreateNewTransactions(tx pgx.Tx,data Transaction) (Transaction, error) {
 }
 
 
-func CreateTransactionDetail(tx pgx.Tx,data TransactionDetail) (TransactionDetail,error) {
+func CreateTransactionDetail(tx pgx.Tx,data dtos.TransactionDetail) (dtos.TransactionDetail,error) {
 	db := lib.DB()
 	defer db.Close(context.Background())
 	tx, err := db.BeginTx(context.Background(), pgx.TxOptions{})
     if err != nil {
-        return TransactionDetail{}, err 
+        return dtos.TransactionDetail{}, err 
     }
 
     sql := `insert into "transactions_details" (transaction_id, section_id, ticket_qty) values ($1, $2, $3) returning "id", "transaction_id", "section_id", "ticket_qty"`
     row := tx.QueryRow(context.Background(), sql, data.TransactionId, data.SectionId, data.TicketQuantity)
 
-    var detail TransactionDetail
+    var detail dtos.TransactionDetail
     err = row.Scan(
         &detail.Id,
         &detail.TransactionId,
@@ -87,11 +67,11 @@ func CreateTransactionDetail(tx pgx.Tx,data TransactionDetail) (TransactionDetai
     )
     if err != nil {
         tx.Rollback(context.Background()) 
-        return TransactionDetail{}, err 
+        return dtos.TransactionDetail{}, err 
     }
 
     if commitErr := tx.Commit(context.Background()); commitErr != nil {
-        return TransactionDetail{}, commitErr 
+        return dtos.TransactionDetail{}, commitErr 
     }
 
     fmt.Println(detail, "detail")
@@ -99,7 +79,7 @@ func CreateTransactionDetail(tx pgx.Tx,data TransactionDetail) (TransactionDetai
 }
 
 
-func DetailsTransaction(id int) ([]ResultDetail, error) {
+func DetailsTransaction(id int) ([]models.ResultDetail, error) {
     db := lib.DB()
     defer db.Close(context.Background())
 
@@ -122,7 +102,7 @@ func DetailsTransaction(id int) ([]ResultDetail, error) {
         id,
     )
 
-    row, err := pgx.CollectRows(send, pgx.RowToStructByPos[ResultDetail])
+    row, err := pgx.CollectRows(send, pgx.RowToStructByPos[models.ResultDetail])
     if err != nil {
         fmt.Println(err)
     }

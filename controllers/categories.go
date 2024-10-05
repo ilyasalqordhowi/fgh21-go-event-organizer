@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 func ListAllCategory(c *gin.Context){
     search := c.Query("search")
@@ -24,7 +25,7 @@ func ListAllCategory(c *gin.Context){
 	 if page > 1 {
         page = (page - 1)*limit
     }
-    listCategory,count := models.FindAllCategories(search,page,limit)
+    listCategory,count := repository.FindAllCategories(search,page,limit)
 	totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
     prev := 0
@@ -52,7 +53,7 @@ func ListAllCategory(c *gin.Context){
 	}
 func DetailCategory(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data := models.FindOneCategories(id)
+	data := repository.FindOneCategories(id)
 	fmt.Println(id)
 
 	if data.Id == id {
@@ -72,7 +73,7 @@ func DetailCategory(c *gin.Context) {
 func CreateCategory(c *gin.Context) {
     newCategory := models.Categories{}
     id, _ := c.Get("userId")
-    err := models.CreateCategories(newCategory, id.(int))
+    err := repository.CreateCategories(newCategory, id.(int))
     
     if err := c.ShouldBind(&newCategory); err != nil {
         c.JSON(http.StatusBadRequest, lib.Message{
@@ -99,7 +100,7 @@ func CreateCategory(c *gin.Context) {
 }
 func DeleteCategory(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
-	dataCategory := models.FindOneCategories(id)
+	dataCategory := repository.FindOneCategories(id)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, lib.Message{
@@ -109,7 +110,7 @@ func DeleteCategory(c *gin.Context){
 		return
 	}
 
-	err = models.RemoveEvent(id)
+	err = repository.RemoveEvent(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, lib.Message{
 			Success:  false,
@@ -142,7 +143,7 @@ func UpdateCategory(c *gin.Context) {
 	if page > 1 {
         page = (page - 1)*limit
     }
-    data,count := models.FindAllCategories(search,page,limit)
+    data,count := repository.FindAllCategories(search,page,limit)
 	totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
     prev := 0
@@ -190,7 +191,7 @@ func UpdateCategory(c *gin.Context) {
     }
     category.Id = idCategory
 
-    // models.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)
+    // repository.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)
 
     c.JSON(http.StatusOK, lib.Message{
         Success: true,

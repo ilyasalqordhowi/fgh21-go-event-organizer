@@ -5,19 +5,20 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
-	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 
 type Token struct{
 	JWToken string `json:"token"`
 }
 func AuthLogin(ctx *gin.Context) {
-    var user models.User
+    var user dtos.User
     ctx.Bind(&user)
-    found := models.FindOneUserByEmail(user.Email)
+    found := repository.FindOneUserByEmail(user.Email)
     fmt.Println(found)
-    if found == (models.User{}) {
+    if found == (dtos.User{}) {
         ctx.JSON(http.StatusUnauthorized,
             lib.Message{
                 Success: false,

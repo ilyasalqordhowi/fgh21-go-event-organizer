@@ -11,17 +11,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
-	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 
 func CreateProfile(ctx *gin.Context) {
-    account := models.JoinRegist{}
+    account := dtos.JoinRegist{}
     if err := ctx.ShouldBind(&account); err != nil {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    profile, err := models.CreateProfile(account)
+    profile, err := repository.CreateProfile(account)
 	if *account.Email == "" && account.Password == "" && profile.FullName == ""{
 		  ctx.JSON(http.StatusBadRequest,
         lib.Message{
@@ -47,7 +48,7 @@ func CreateProfile(ctx *gin.Context) {
         })
 }
 func ListAllProfile(r *gin.Context) {
-	results := models.FindAllProfile()
+	results := repository.FindAllProfile()
 	r.JSON(http.StatusOK, lib.Message{
 		Success: true,
 		Message: "List All Profile",
@@ -56,8 +57,8 @@ func ListAllProfile(r *gin.Context) {
 }
 func DetailUsersProfile(ctx *gin.Context) {
 	id := ctx.GetInt("userId")
-	data := models.FindOneProfile(id)
-	dataUser := models.FindOneUser(id)
+	data := repository.FindOneProfile(id)
+	dataUser := repository.FindOneUser(id)
 	fmt.Println(data,"helo")
 
 	ctx.JSON(http.StatusOK, lib.Message{
@@ -72,7 +73,7 @@ func DetailUsersProfile(ctx *gin.Context) {
 }
 func ListOneNational(r *gin.Context) {
 	id,_ := strconv.Atoi(r.Param("id"))
-	results := models.FindOneNational(id)
+	results := repository.FindOneNational(id)
 	r.JSON(http.StatusOK, lib.Message{
 		Success: true,
 		Message: "Id National",
@@ -80,7 +81,7 @@ func ListOneNational(r *gin.Context) {
 	})
 }
 func ListAllNational(r *gin.Context) {
-	results := models.FindAllNational()
+	results := repository.FindAllNational()
 	r.JSON(http.StatusOK, lib.Message{
 		Success: true,
 		Message: "List All National",
@@ -89,12 +90,12 @@ func ListAllNational(r *gin.Context) {
 }
 func UpdateProfile(c *gin.Context) {
 	id := c.GetInt("userId")
-	var form models.Profile
-	var  user models.User
+	var form dtos.Profile
+	var  user dtos.User
 	err := c.Bind(&form)
 	errUser := c.Bind(&user)
-	data := models.FindOneProfile(id)
-	dataProfile := models.FindOneUser(id)
+	data := repository.FindOneProfile(id)
+	dataProfile := repository.FindOneUser(id)
 	if err := c.ShouldBind(&form); err != nil {
         c.JSON(http.StatusBadRequest, lib.Message{
             Success: false,
@@ -120,8 +121,8 @@ func UpdateProfile(c *gin.Context) {
 				return
 			}
 
-			models.EditProfile(form,id)
-			models.UpdateUsername(user,id)
+			repository.EditProfile(form,id)
+			repository.UpdateUsername(user,id)
 			c.JSON(http.StatusOK, lib.Message{
 				Success: true,
 				Message: "Profile Found",
@@ -188,7 +189,7 @@ func UploadProfileImage(c *gin.Context) {
 			
 				dataImg := "http://localhost:8888/img/profile/" + newFile
 			
-				delImgBefore := models.FindOneProfile(id)
+				delImgBefore := repository.FindOneProfile(id)
 				
 				if delImgBefore.Picture != nil {
 				   fileDel := strings.Split(*delImgBefore.Picture, "8000")[1]
@@ -197,7 +198,7 @@ func UploadProfileImage(c *gin.Context) {
 				  
 				}
 			
-				profile, err := models.UpdateProfileImage(models.Profile{Picture: &dataImg}, id)
+				profile, err := repository.UpdateProfileImage(dtos.Profile{Picture: &dataImg}, id)
 				if err != nil {
 				c.JSON(http.StatusBadRequest , lib.Message{
 					Success: false,

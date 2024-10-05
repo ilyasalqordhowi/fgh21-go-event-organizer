@@ -9,10 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 
 func ListAllWishlist(r *gin.Context) {
-	results := models.FindAllwishlist()
+	results := repository.FindAllwishlist()
 	r.JSON(http.StatusOK, lib.Message{
 		Success: true,
 		Message: "List All whislist",
@@ -20,11 +21,11 @@ func ListAllWishlist(r *gin.Context) {
 	})
 }
 func ListOneWishlist(ctx *gin.Context) {
-	// Extract the user ID from the context
+	
 	id := ctx.GetInt("userId")
 
-	// Fetch the wishlist items for the user
-	wishlistItems, err := models.FindOnewishlist(id)
+	
+	wishlistItems, err := repository.FindOnewishlist(id)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, lib.Message{
 			Success: false,
@@ -46,7 +47,7 @@ func ListOneWishlist(ctx *gin.Context) {
 
 	for _, wishlist := range wishlistItems {
 
-		event, err := models.FindOneeventsbyid(wishlist.Event_id)
+		event, err := repository.FindOneeventsbyid(wishlist.Event_id)
 		if err != nil {
 		
 			log.Printf("Failed to fetch event with id %d: %v", wishlist.Event_id, err)
@@ -100,7 +101,7 @@ func CreateWishListEvent(ctx *gin.Context) {
 
 	log.Printf("userId: %d, eventid: %d", userId, eventid)
 
-	err = models.Createwishlist(eventid, userId)
+	err = repository.Createwishlist(eventid, userId)
 	fmt.Println(err,"dhdihidhi")
 	if err != nil {
 
@@ -145,7 +146,7 @@ func DeleteWishlist(ctx *gin.Context) {
 	}
 
 
-	err = models.Deletewishlist(user_id, event_id)
+	err = repository.Deletewishlist(user_id, event_id)
 	if err != nil {
 		if err.Error() == "whislist item not found" {
 			ctx.JSON(http.StatusNotFound, lib.Message{

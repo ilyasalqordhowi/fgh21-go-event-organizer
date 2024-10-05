@@ -7,8 +7,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
-	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 func ListAllEvent(c *gin.Context){
     search := c.Query("search")
@@ -24,7 +25,7 @@ func ListAllEvent(c *gin.Context){
     if page > 1 {
         page = (page - 1)*limit
     }
-    listEvent,count := models.FindAllEvent(search,page,limit)
+    listEvent,count := repository.FindAllEvent(search,page,limit)
 
     totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
@@ -53,7 +54,7 @@ func ListAllEvent(c *gin.Context){
 	}
 func DetailEvent(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data := models.FindOneEvent(id)
+	data := repository.FindOneEvent(id)
 	fmt.Println(id)
 
 	if data.Id == id {
@@ -73,7 +74,7 @@ func DetailEvent(c *gin.Context) {
 func DetailCreateEvent(c *gin.Context) {
     id := c.GetInt("userId")
     fmt.Println(id)
-    dataEvent := models.FindOneByEvent(id)
+    dataEvent := repository.FindOneByEvent(id)
 
     c.JSON(http.StatusOK, lib.Message{
         Success: true,
@@ -83,7 +84,7 @@ func DetailCreateEvent(c *gin.Context) {
 
 }
 func CreateEvent(ctx *gin.Context) {
-    var newEvent models.Event
+    var newEvent dtos.Event
     id, exists := ctx.Get("userId")
     fmt.Println(newEvent)
     if !exists {
@@ -112,7 +113,7 @@ func CreateEvent(ctx *gin.Context) {
         return
     }
 
-    err := models.CreateEvents(newEvent, userId)
+    err := repository.CreateEvents(newEvent, userId)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, lib.Message{
             Success: false,
@@ -132,7 +133,7 @@ func CreateEvent(ctx *gin.Context) {
 
 func DeleteEvent(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
-	dataEvent := models.FindOneEvent(id)
+	dataEvent := repository.FindOneEvent(id)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, lib.Message{
@@ -142,7 +143,7 @@ func DeleteEvent(c *gin.Context){
 		return
 	}
 
-	err = models.RemoveEvent(id)
+	err = repository.RemoveEvent(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, lib.Message{
 			Success:  false,
@@ -176,7 +177,7 @@ func UpdateEvent(c *gin.Context) {
         page = (page - 1)*limit
     }
 
-    data,count := models.FindAllEvent(search,page,limit)
+    data,count := repository.FindAllEvent(search,page,limit)
 
 
     totalPage := math.Ceil(float64(count)/float64(limit))
@@ -199,14 +200,14 @@ func UpdateEvent(c *gin.Context) {
     }
 	
 
-   event := models.Event{}
+   event := dtos.Event{}
     err := c.Bind(&event)
     if err != nil {
         fmt.Println(err)
         return
     }
 
-    result := models.Event{}
+    result := dtos.Event{}
     for _, v := range data {
         if v.Id == id {
             result = v
@@ -237,7 +238,8 @@ func UpdateEvent(c *gin.Context) {
 
 func DetailEventSections(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data,err := models.FindSectionsByEvent(id)
+
+	data,err := repository.FindSectionsByEvent(id)
 	fmt.Println(id)
 
     if err != nil {
@@ -267,7 +269,7 @@ func ListAllPaymentMethod(c *gin.Context){
     if page > 1 {
         page = (page - 1)*limit
     }
-    listPayment,count := models.FindAllPaymentMethod(search,page,limit)
+    listPayment,count := repository.FindAllPaymentMethod(search,page,limit)
 
     totalPage := math.Ceil(float64(count)/float64(limit))
     next := 0 
@@ -294,4 +296,4 @@ func ListAllPaymentMethod(c *gin.Context){
 			Results: listPayment,
 		})	
 	}
-// models.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)
+// repository.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
-	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 
 func ListAllLocations(ctx *gin.Context) {
@@ -22,7 +22,7 @@ func ListAllLocations(ctx *gin.Context) {
 		page = 1
 	}
 
-	results := models.FindAllLocations(search, limit, page)
+	results := repository.FindAllLocations(search, limit, page)
 
 	ctx.JSON(http.StatusOK, lib.Message{
 		Success: true,

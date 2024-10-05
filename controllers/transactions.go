@@ -6,13 +6,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
-	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 	"github.com/jackc/pgx/v5"
 )
 
 func CreateTransaction(ctx *gin.Context) {
-    form := models.Transaction{}
+    form := dtos.Transaction{}
     err := ctx.ShouldBind(&form);
     if  err != nil {
         ctx.JSON(http.StatusBadRequest,
@@ -31,7 +32,7 @@ func CreateTransaction(ctx *gin.Context) {
         })
         return
     }
-    trx, err := models.CreateNewTransactions(tx, models.Transaction{
+    trx, err := repository.CreateNewTransactions(tx, dtos.Transaction{
         UserId:    ctx.GetInt("userId"),
         PaymentMethodId: form.PaymentMethodId,
         EventId:   form.EventId,
@@ -45,7 +46,7 @@ func CreateTransaction(ctx *gin.Context) {
         return
     }
     for i := range form.SectionId {
-		_,err :=  models.CreateTransactionDetail(tx,models.TransactionDetail{
+		_,err :=  repository.CreateTransactionDetail(tx,dtos.TransactionDetail{
 			SectionId:      form.SectionId[i],
             TicketQuantity: form.TicketQty[i],
             TransactionId:  trx.Id,
@@ -77,7 +78,7 @@ func CreateTransaction(ctx *gin.Context) {
 func FindTransactionByUserId(ctx *gin.Context){
     id := ctx.GetInt("userId")
 
-	result, err := models.DetailsTransaction(id)
+	result, err := repository.DetailsTransaction(id)
 	fmt.Print(err)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest,

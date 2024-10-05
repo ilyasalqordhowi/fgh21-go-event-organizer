@@ -1,26 +1,17 @@
-package models
+package repository
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/jackc/pgx/v5"
 )
 
-type User struct {
-	Id       int    `json:"id"`
-	Email    string `json:"email" form:"email" binding:"required,email" db:"email"`
-	Password string `json:"-" form:"password" db:"password"`
-	Username *string `json:"username" form:"username" db:"username"`
-}
-type ChangePassword struct{
-	OldPassword string `form:"oldPassword" json:"oldPassword"`
-	NewPassword string `form:"newPassword" json:"newPassword"`
-}
 
 
-func FindAllUsers(search string ,page int,limit int) ([]User,int) {
+func FindAllUsers(search string ,page int,limit int) ([]dtos.User,int) {
 	db := lib.DB()
 	defer db.Close(context.Background())
 	offset := (page - 1) * limit
@@ -28,7 +19,7 @@ func FindAllUsers(search string ,page int,limit int) ([]User,int) {
 	sql :=	`SELECT * FROM "users" where "email" ilike '%' || $1 || '%' offset $2 limit $3`
 	rows, _ := db.Query(context.Background(),sql,search,offset,limit)
 	
-	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[dtos.User])
 
 	fmt.Println(users)
 	
@@ -50,7 +41,7 @@ func TotalUsers(search string)int{
 	)
 	return results
 }
-func FindOneUser(id int) User {
+func FindOneUser(id int) dtos.User {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
@@ -58,7 +49,7 @@ func FindOneUser(id int) User {
 		context.Background(),
 	`SELECT * FROM "users"`,
 )
-	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[dtos.User])
 
 	fmt.Println(users)
 
@@ -66,7 +57,7 @@ func FindOneUser(id int) User {
 		fmt.Println(err)
 	}
 	
-	user := User{}
+	user := dtos.User{}
 	for _, v := range users{
 		if v.Id == id {
 			user = v
@@ -74,7 +65,7 @@ func FindOneUser(id int) User {
 	}
 	return user
 }
-func FindOneUserByEmail(email string) User {
+func FindOneUserByEmail(email string) dtos.User {
 	db := lib.DB()
 	defer db.Close(context.Background())
 	rows, _ := db.Query(
@@ -83,13 +74,13 @@ func FindOneUserByEmail(email string) User {
 		email,
 	)
 
-	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[User])
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[dtos.User])
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	user := User{}
+	user := dtos.User{}
 	for _, val := range users {
 		if val.Email == email{
 			user = val
@@ -98,7 +89,7 @@ func FindOneUserByEmail(email string) User {
 	return user	
 }
 
-func Create(newUser User) User {
+func Create(newUser dtos.User) dtos.User {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
@@ -106,7 +97,7 @@ func Create(newUser User) User {
 	
 sql := `insert into "users" ("email","password","username") values ($1,$2,$3) returning "id","email","password","username"`
 row := db.QueryRow(context.Background(),sql,newUser.Email,newUser.Password,newUser.Username)
-var results User
+var results dtos.User
 row.Scan(
 	&results.Id,
 	&results.Email,
@@ -158,11 +149,11 @@ func UpdatePassword(password string, id int) error {
 	}
 	return nil
 }
-func FindOneUserByPassword(id int) ChangePassword {
+func FindOneUserByPassword(id int) dtos.ChangePassword {
 	db := lib.DB()
 	defer db.Close(context.Background())
    
-	var cp ChangePassword
+	var cp dtos.ChangePassword
 	err := db.QueryRow(context.Background(), `select password from "users" where id = $1`, id).Scan(&cp.OldPassword)
 	if err != nil {
 		fmt.Println(err)
@@ -170,7 +161,7 @@ func FindOneUserByPassword(id int) ChangePassword {
    
 	return cp
    }
-   func UpdateUsername(dataUser User, Id int) error{
+   func UpdateUsername(dataUser dtos.User, Id int) error{
 	db := lib.DB()
 	defer db.Close(context.Background())
 

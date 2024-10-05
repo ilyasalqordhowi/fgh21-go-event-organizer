@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
-	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
 
 func ListAllPartner(r *gin.Context) {
-	results := models.FindAllPartner()
+	results := repository.FindAllPartner()
 	r.JSON(http.StatusOK, lib.Message{
 		Success: true,
 		Message: "List All Partner",
