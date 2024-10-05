@@ -3,7 +3,6 @@ package controllers
 import (
 	"fmt"
 	"math"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -13,119 +12,9 @@ import (
 )
 func ListAllUsers(c *gin.Context){
 	search := c.Query("search")
-	page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	
-	if page < 1 {
-		page = 1
-	}
-	if limit < 1 {
-		limit = 10
-	}
-	 if page > 1 {
-        page = (page - 1)*limit
-    }
-	listUsers,count := repository.FindAllUsers(search,page,limit)
-		totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
 
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "success",
-			ResultsInfo: totalInfo,
-			Results: listUsers,
-		})		
-	}
-func DetailUsers(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	data := repository.FindOneUser(id)
-	fmt.Println(id)
-
-	if data.Id == id {
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "Users Found",
-			Results: data,
-		})
-		return
-	} else {
-		c.JSON(http.StatusNotFound, lib.Message{
-			Success: false,
-			Message: "Users Not Found",
-		})
-	}
-}
-func CreateUsers(c *gin.Context) {
-    newUser := dtos.User{}
-
-    if err := c.ShouldBind(&newUser); 
-	err != nil {
-        c.JSON(http.StatusBadRequest, lib.Message{
-            Success:  false,
-            Message: "Invalid input data",
-        })
-        return
-    }
-
-    addUser := repository.Create(newUser)
-	fmt.Println(addUser)
-	c.JSON(http.StatusOK, lib.Message{
-		Success:  true,
-		Message: "User created successfully",
-		Results: addUser,
-	})
-
-}
-func DeleteUsers(c *gin.Context){
-	id, err := strconv.Atoi(c.Param("id"))
-	dataUser := repository.FindOneUser(id)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "Invalid user ID",
-		})
-		return
-	}
-
-	err = repository.DeleteUsers(id)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "Id Not Found",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, lib.Message{
-		Success:  true,
-		Message: "User deleted successfully",
-		Results: dataUser,
-	})
-
-}
-
-func Update(c *gin.Context) {
-    param := c.Param("id")
-    id,_  := strconv.Atoi(param)
-	search := c.Query("search")
-	page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
 	if page < 1 {
 		page = 1
 	}
@@ -133,97 +22,160 @@ func Update(c *gin.Context) {
 		limit = 10
 	}
 	if page > 1 {
-		page = (page - 1)*limit
+		page = (page - 1) * limit
 	}
-	data,count := repository.FindAllUsers(search,page,limit)
-	totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
 
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
-    user := dtos.User{}
-    err := c.Bind(&user)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
+	listUsers, count := repository.FindAllUsers(search, page, limit)
+	totalPage := math.Ceil(float64(count) / float64(limit))
+	next := 0
+	prev := 0
 
-    result := dtos.User{}
-    for _, v := range data {
-        if v.Id == id {
-            result = v
-        }
-    }
+	if int(totalPage) > 1 {
+		next = int(totalPage) - page
+	}
+	if int(totalPage) > 1 {
+		prev = int(totalPage) - 1
+	}
 
-    if result.Id == 0 {
-        c.JSON(http.StatusNotFound, lib.Message{
-            Success: false,
-            Message: "user with id " + param + " not found",
-        })
-        return
-    }
+	totalInfo := lib.TotalInfo{
+		TotalData: count,
+		TotalPage: int(totalPage),
+		Page:      page,
+		Limit:     limit,
+		Next:      next,
+		Prev:      prev,
+	}
+	lib.HandlerOk(c, "success", totalInfo, listUsers)
+	}
+func DetailUsers(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	data := repository.FindOneUser(id)
+	fmt.Println(id)
 
-    idUser := 0
-    for _, v := range data {
-        idUser = v.Id
-    }
-    user.Id = idUser
+	if data.Id == id {
+		lib.HandlerOk(c, "Users Found", nil, data)
+		return
+	}
+	lib.HandlerNotFound(c, "Users Not Found")
+}
+func CreateUsers(c *gin.Context) {
+	newUser := dtos.User{}
 
-    repository.EditUser(user.Email, user.Password, *user.Username ,param)
+	if err := c.ShouldBind(&newUser); err != nil {
+		lib.HandlerBadRequest(c, "Invalid input data")
+		return
+	}
 
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "user  id " + param + " edit Success",
-		ResultsInfo: totalInfo,
-        Results: user,
-    })
+	addUser := repository.Create(newUser)
+	fmt.Println(addUser)
+	lib.HandlerOk(c, "User created successfully", nil, addUser)
+}
+
+func DeleteUsers(c *gin.Context){
+	id, err := strconv.Atoi(c.Param("id"))
+	dataUser := repository.FindOneUser(id)
+
+	if err != nil {
+		lib.HandlerBadRequest(c, "Invalid user ID")
+		return
+	}
+
+	err = repository.DeleteUsers(id)
+	if err != nil {
+		lib.HandlerBadRequest(c, "Id Not Found")
+		return
+	}
+
+	lib.HandlerOk(c, "User deleted successfully", nil, dataUser)
+}
+
+func Update(c *gin.Context) {
+	param := c.Param("id")
+	id, _ := strconv.Atoi(param)
+	search := c.Query("search")
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if page > 1 {
+		page = (page - 1) * limit
+	}
+
+	data, count := repository.FindAllUsers(search, page, limit)
+	totalPage := math.Ceil(float64(count) / float64(limit))
+	next := 0
+	prev := 0
+
+	if int(totalPage) > 1 {
+		next = int(totalPage) - page
+	}
+	if int(totalPage) > 1 {
+		prev = int(totalPage) - 1
+	}
+
+	totalInfo := lib.TotalInfo{
+		TotalData: count,
+		TotalPage: int(totalPage),
+		Page:      page,
+		Limit:     limit,
+		Next:      next,
+		Prev:      prev,
+	}
+
+	user := dtos.User{}
+	err := c.Bind(&user)
+	if err != nil {
+		lib.HandlerBadRequest(c, "Invalid input data")
+		return
+	}
+
+	result := dtos.User{}
+	for _, v := range data {
+		if v.Id == id {
+			result = v
+		}
+	}
+
+	if result.Id == 0 {
+		lib.HandlerNotFound(c, "User with id "+param+" not found")
+		return
+	}
+
+	idUser := 0
+	for _, v := range data {
+		idUser = v.Id
+	}
+	user.Id = idUser
+
+	repository.EditUser(user.Email, user.Password, *user.Username, param)
+
+	lib.HandlerOk(c, "User id "+param+" edit Success", totalInfo, user)
 }
 func UpdatePassword(ctx *gin.Context) {
 	id := ctx.GetInt("userId")
 	var form dtos.ChangePassword
 	err := ctx.Bind(&form)
 	if err != nil {
-		fmt.Println(err)
+		lib.HandlerBadRequest(ctx, "Invalid input data")
 		return
 	}
-    found := repository.FindOneUserByPassword(id)
+	found := repository.FindOneUserByPassword(id)
 
-	isVerified := lib.Verify(form.OldPassword,found.OldPassword)
+	isVerified := lib.Verify(form.OldPassword, found.OldPassword)
 	fmt.Println(isVerified)
 	if isVerified {
 		err := repository.UpdatePassword(form.NewPassword, id)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest,
-				lib.Message{
-				Success: false,
-				Message: "Failed to update password",
-			})
+			lib.HandlerBadRequest(ctx, "Failed to update password")
 		} else {
-			ctx.JSON(http.StatusOK,
-				lib.Message{
-					Success: true,
-					Message: "Update password success",
-				  })
+			lib.HandlerOk(ctx, "Update password success", nil, nil)
 		}
-		}else{
-			ctx.JSON(http.StatusBadRequest,
-		 	lib.Message{
-			 Success: false,
-			 Message: "Wrong Password",
-		 })
-		}
-
+	} else {
+		lib.HandlerBadRequest(ctx, "Wrong Password")
+	}
 	}

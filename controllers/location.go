@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -24,9 +23,5 @@ func ListAllLocations(ctx *gin.Context) {
 
 	results := repository.FindAllLocations(search, limit, page)
 
-	ctx.JSON(http.StatusOK, lib.Message{
-		Success: true,
-		Message: "List All Locations",
-		Results: results,
-	})
+	lib.HandlerOk(ctx, "List All Locations",nil, results)
 }

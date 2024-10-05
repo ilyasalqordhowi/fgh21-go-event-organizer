@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
@@ -14,65 +13,48 @@ import (
 
 func CreateTransaction(ctx *gin.Context) {
     form := dtos.Transaction{}
-    err := ctx.ShouldBind(&form);
-    if  err != nil {
-        ctx.JSON(http.StatusBadRequest,
-            lib.Message{
-                Success: false,
-                Message: "Created Transaction Failed",
-               
-            })
-        return
-    }
-    tx, err := lib.DB().BeginTx(context.Background(), pgx.TxOptions{})
-    if err != nil {
-        ctx.JSON(http.StatusInternalServerError, lib.Message{
-            Success: false,
-            Message: "Failed to start transaction",
-        })
-        return
-    }
-    trx, err := repository.CreateNewTransactions(tx, dtos.Transaction{
-        UserId:    ctx.GetInt("userId"),
-        PaymentMethodId: form.PaymentMethodId,
-        EventId:   form.EventId,
-    })
-    if err != nil {
-        tx.Rollback(context.Background())
-        ctx.JSON(http.StatusInternalServerError, lib.Message{
-            Success: false,
-            Message: "Failed to create transaction: " + err.Error(),
-        })
-        return
-    }
-    for i := range form.SectionId {
-		_,err :=  repository.CreateTransactionDetail(tx,dtos.TransactionDetail{
+	err := ctx.ShouldBind(&form)
+	if err != nil {
+		lib.HandlerBadRequest(ctx, "Created Transaction Failed")
+		return
+	}
+
+	tx, err := lib.DB().BeginTx(context.Background(), pgx.TxOptions{})
+	if err != nil {
+		lib.HandlerBadRequest(ctx, "Failed to start transaction")
+		return
+	}
+
+	trx, err := repository.CreateNewTransactions(tx, dtos.Transaction{
+		UserId:          ctx.GetInt("userId"),
+		PaymentMethodId: form.PaymentMethodId,
+		EventId:         form.EventId,
+	})
+	if err != nil {
+		tx.Rollback(context.Background())
+		lib.HandlerBadRequest(ctx, "Failed to create transaction: "+err.Error())
+		return
+	}
+
+	for i := range form.SectionId {
+		_, err := repository.CreateTransactionDetail(tx, dtos.TransactionDetail{
 			SectionId:      form.SectionId[i],
-            TicketQuantity: form.TicketQty[i],
-            TransactionId:  trx.Id,
-        })
-        if err != nil {
-            tx.Rollback(context.Background())
-            ctx.JSON(http.StatusInternalServerError, lib.Message{
-                Success: false,
-                Message: "Failed to create transaction detail: " + err.Error(),
-            })
-            return
-        }
-    }
-    if err := tx.Commit(context.Background()); err != nil {
-        ctx.JSON(http.StatusInternalServerError, lib.Message{
-            Success: false,
-            Message: "Failed to commit transaction: " + err.Error(),
-        })
-        return
-    }
-    ctx.JSON(http.StatusOK,
-        lib.Message{
-            Success: true,
-            Message: "Transaction success",
-            Results: trx,
-        })
+			TicketQuantity: form.TicketQty[i],
+			TransactionId:  trx.Id,
+		})
+		if err != nil {
+			tx.Rollback(context.Background())
+			lib.HandlerBadRequest(ctx, "Failed to create transaction detail: "+err.Error())
+			return
+		}
+	}
+
+	if err := tx.Commit(context.Background()); err != nil {
+		lib.HandlerBadRequest(ctx, "Failed to commit transaction: "+err.Error())
+		return
+	}
+
+	lib.HandlerOk(ctx, "Transaction success", nil, trx)
 }
 
 func FindTransactionByUserId(ctx *gin.Context){
@@ -81,18 +63,9 @@ func FindTransactionByUserId(ctx *gin.Context){
 	result, err := repository.DetailsTransaction(id)
 	fmt.Print(err)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest,
-			lib.Message{
-				Success: false,
-				Message: "Transaction Not Found",
-                Results: result,
-			})
+		lib.HandlerBadRequest(ctx, "Transaction Not Found")
 		return
 	}
-	ctx.JSON(http.StatusOK,
-		lib.Message{
-			Success: true,
-			Message: "Transaction Found",
-			Results: result,
-		})
+
+	lib.HandlerOk(ctx, "Transaction Found", nil, result)
 }

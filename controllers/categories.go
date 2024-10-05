@@ -1,9 +1,7 @@
 package controllers
 
 import (
-	"fmt"
 	"math"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -13,190 +11,147 @@ import (
 )
 func ListAllCategory(c *gin.Context){
     search := c.Query("search")
-    page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+
 	if page < 1 {
-        page = 1
+		page = 1
 	}
 	if limit < 1 {
-        limit = 5
+		limit = 5
 	}
-	 if page > 1 {
-        page = (page - 1)*limit
-    }
-    listCategory,count := repository.FindAllCategories(search,page,limit)
-	totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
+	if page > 1 {
+		page = (page - 1) * limit
+	}
 
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "success",
-			ResultsInfo: totalInfo,
-			Results: listCategory,
-		})		
+	listCategory, count := repository.FindAllCategories(search, page, limit)
+	totalPage := math.Ceil(float64(count) / float64(limit))
+	next := 0
+	prev := 0
+
+	if int(totalPage) > 1 {
+		next = int(totalPage) - page
+	}
+	if int(totalPage) > 1 {
+		prev = int(totalPage) - 1
+	}
+
+	totalInfo := lib.TotalInfo{
+		TotalData: count,
+		TotalPage: int(totalPage),
+		Page:      page,
+		Limit:     limit,
+		Next:      next,
+		Prev:      prev,
+	}
+
+	lib.HandlerOk(c, "success", totalInfo, listCategory)
+
 	}
 func DetailCategory(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+    id, _ := strconv.Atoi(c.Param("id"))
 	data := repository.FindOneCategories(id)
-	fmt.Println(id)
 
 	if data.Id == id {
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "categories Found",
-			Results: data,
-		})
-		return
+		lib.HandlerOk(c, "categories Found", nil, data)
 	} else {
-		c.JSON(http.StatusNotFound, lib.Message{
-			Success: false,
-			Message: "categories Not Found",
-		})
+		lib.HandlerNotFound(c, "categories Not Found")
 	}
 }
 func CreateCategory(c *gin.Context) {
     newCategory := models.Categories{}
-    id, _ := c.Get("userId")
-    err := repository.CreateCategories(newCategory, id.(int))
-    
-    if err := c.ShouldBind(&newCategory); err != nil {
-        c.JSON(http.StatusBadRequest, lib.Message{
-            Success: false,
-            Message: "Invalid input data",
-        })
-        return
-    }
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, lib.Message{
-            Success: false,
-            Message: "Failed to create Profile",
-        })
-        return
-    }
-    
-    // newCategory.CreateBy = id.(int)
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "Events created successfully",
-        Results: newCategory,
-    })
+	id, _ := c.Get("userId")
+	err := repository.CreateCategories(newCategory, id.(int))
+
+	if err := c.ShouldBind(&newCategory); err != nil {
+		lib.HandlerBadRequest(c, "Invalid input data")
+		return
+	}
+	if err != nil {
+		lib.HandlerBadRequest(c, "Failed to create Category")
+		return
+	}
+
+	lib.HandlerOk(c, "Category created successfully", nil, newCategory)
 
 }
 func DeleteCategory(c *gin.Context){
-	id, err := strconv.Atoi(c.Param("id"))
+    id, err := strconv.Atoi(c.Param("id"))
 	dataCategory := repository.FindOneCategories(id)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "Invalid Category ID",
-		})
+		lib.HandlerBadRequest(c, "Invalid Category ID")
 		return
 	}
 
 	err = repository.RemoveEvent(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "Id Not Found",
-		})
+		lib.HandlerNotFound(c, "Id Not Found")
 		return
 	}
 
-	c.JSON(http.StatusOK, lib.Message{
-		Success:  true,
-		Message: "Category deleted successfully",
-		Results: dataCategory,
-	})
+	lib.HandlerOk(c, "Category deleted successfully", nil, dataCategory)
 
 }
 
 func UpdateCategory(c *gin.Context) {
     param := c.Param("id")
-    id,_  := strconv.Atoi(param)
-    search := c.Query("search")
-    page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	
+	id, _ := strconv.Atoi(param)
+
+	search := c.Query("search")
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+
 	if page < 1 {
-        page = 1
+		page = 1
 	}
 	if limit < 1 {
-        limit = 5
-	} 
+		limit = 5
+	}
 	if page > 1 {
-        page = (page - 1)*limit
-    }
-    data,count := repository.FindAllCategories(search,page,limit)
-	totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
+		page = (page - 1) * limit
+	}
 
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
+	data, count := repository.FindAllCategories(search, page, limit)
+	totalPage := math.Ceil(float64(count) / float64(limit))
+	next := 0
+	prev := 0
 
-   category := models.Categories{}
-    err := c.Bind(&category)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
+	if int(totalPage) > 1 {
+		next = int(totalPage) - page
+	}
+	if int(totalPage) > 1 {
+		prev = int(totalPage) - 1
+	}
 
-    result := models.Categories{}
-    for _, v := range data {
-        if v.Id == id {
-            result = v
-        }
-    }
+	totalInfo := lib.TotalInfo{
+		TotalData: count,
+		TotalPage: int(totalPage),
+		Page:      page,
+		Limit:     limit,
+		Next:      next,
+		Prev:      prev,
+	}
 
-    if result.Id == 0 {
-        c.JSON(http.StatusNotFound, lib.Message{
-            Success: false,
-            Message: "category with id " + param + " not found",
-        })
-        return
-    }
+	category := models.Categories{}
+	err := c.Bind(&category)
+	if err != nil {
+		lib.HandlerBadRequest(c, "Failed to bind data")
+		return
+	}
 
-    idCategory := 0
-    for _, v := range data {
-        idCategory = v.Id
-    }
-    category.Id = idCategory
+	result := models.Categories{}
+	for _, v := range data {
+		if v.Id == id {
+			result = v
+		}
+	}
 
-    // repository.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)
+	if result.Id == 0 {
+		lib.HandlerNotFound(c, "category with id "+param+" not found")
+		return
+	}
 
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "Event  id " + param + " edit Success",
-		ResultsInfo: totalInfo,
-        Results:category,
-    })
+	category.Id = result.Id
+	lib.HandlerOk(c, "Category id "+param+" edit success", totalInfo, category)
 }

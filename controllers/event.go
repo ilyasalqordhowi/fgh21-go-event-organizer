@@ -1,9 +1,7 @@
 package controllers
 
 import (
-	"fmt"
 	"math"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -13,122 +11,90 @@ import (
 )
 func ListAllEvent(c *gin.Context){
     search := c.Query("search")
-    page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+
 	if page < 1 {
-        page = 1
+		page = 1
 	}
 	if limit < 1 {
-        limit = 1000
+		limit = 1000
 	}
-    if page > 1 {
-        page = (page - 1)*limit
-    }
-    listEvent,count := repository.FindAllEvent(search,page,limit)
+	if page > 1 {
+		page = (page - 1) * limit
+	}
 
-    totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
+	listEvent, count := repository.FindAllEvent(search, page, limit)
 
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "success",
-            ResultsInfo: totalInfo,
-			Results: listEvent,
-		})	
+	totalPage := math.Ceil(float64(count) / float64(limit))
+	next := 0
+	prev := 0
+
+	if int(totalPage) > 1 {
+		next = int(totalPage) - page
+	}
+	if int(totalPage) > 1 {
+		prev = int(totalPage) - 1
+	}
+
+	totalInfo := lib.TotalInfo{
+		TotalData: count,
+		TotalPage: int(totalPage),
+		Page:      page,
+		Limit:     limit,
+		Next:      next,
+		Prev:      prev,
+	}
+
+	lib.HandlerOk(c, "success", totalInfo, listEvent)
 	}
 func DetailEvent(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	data := repository.FindOneEvent(id)
-	fmt.Println(id)
 
 	if data.Id == id {
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "events Found",
-			Results: data,
-		})
-		return
+		lib.HandlerOk(c, "events Found", nil, data)
 	} else {
-		c.JSON(http.StatusNotFound, lib.Message{
-			Success: false,
-			Message: "events Not Found",
-		})
+		lib.HandlerNotFound(c, "events Not Found")
 	}
 }
 func DetailCreateEvent(c *gin.Context) {
     id := c.GetInt("userId")
-    fmt.Println(id)
-    dataEvent := repository.FindOneByEvent(id)
+	dataEvent := repository.FindOneByEvent(id)
 
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "Event Found",
-        Results: dataEvent,
-    })
+	lib.HandlerOk(c, "Event Found", nil, dataEvent)
 
 }
 func CreateEvent(ctx *gin.Context) {
     var newEvent dtos.Event
-    id, exists := ctx.Get("userId")
-    fmt.Println(newEvent)
-    if !exists {
-        ctx.JSON(http.StatusUnauthorized, lib.Message{
-            Success: false,
-            Message: "Unauthorized",
-        })
-        return
-    }
+	id, exists := ctx.Get("userId")
 
-    userId, ok := id.(int)
-    if !ok {
-        ctx.JSON(http.StatusInternalServerError, lib.Message{
-            Success: false,
-            Message: "Invalid user ID",
-        })
-        return
-    }
+	if !exists {
+		lib.HandlerUnauthorized(ctx, "Unauthorized")
+		return
+	}
 
-    // Bind input data ke struct event
-    if err := ctx.ShouldBind(&newEvent); err != nil {
-        ctx.JSON(http.StatusBadRequest, lib.Message{
-            Success: false,
-            Message: "Invalid input data",
-        })
-        return
-    }
+	userId, ok := id.(int)
+	if !ok {
+		lib.HandlerBadRequest(ctx, "Invalid user ID")
+		return
+	}
 
-    err := repository.CreateEvents(newEvent, userId)
-    if err != nil {
-        ctx.JSON(http.StatusInternalServerError, lib.Message{
-            Success: false,
-            Message: "Failed to create event",
-        })
-        return
-    }
+	if err := ctx.ShouldBind(&newEvent); err != nil {
+		lib.HandlerBadRequest(ctx, "Invalid input data")
+		return
+	}
 
-    newEvent.CreateBy = &userId
+	err := repository.CreateEvents(newEvent, userId)
+	if err != nil {
+		lib.HandlerBadRequest(ctx, "Failed to create event")
+		return
+	}
 
-    ctx.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "Event created successfully",
-        Results: newEvent,
-    })
+	newEvent.CreateBy = &userId
+
+	lib.HandlerOk(ctx, "Event created successfully", nil, newEvent)
+
 }
 
 func DeleteEvent(c *gin.Context){
@@ -136,164 +102,135 @@ func DeleteEvent(c *gin.Context){
 	dataEvent := repository.FindOneEvent(id)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "Invalid Event ID",
-		})
+		lib.HandlerBadRequest(c, "Invalid Event ID")
 		return
 	}
 
 	err = repository.RemoveEvent(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Message{
-			Success:  false,
-			Message: "Id Not Found",
-		})
+		lib.HandlerNotFound(c, "Id Not Found")
 		return
 	}
 
-	c.JSON(http.StatusOK, lib.Message{
-		Success:  true,
-		Message: "Event deleted successfully",
-		Results: dataEvent,
-	})
+	lib.HandlerOk(c, "Event deleted successfully", nil, dataEvent)
 
 }
 
 func UpdateEvent(c *gin.Context) {
     param := c.Param("id")
-    id,_  := strconv.Atoi(param)
-    search := c.Query("search")
-    page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	
+	id, _ := strconv.Atoi(param)
+	search := c.Query("search")
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+
 	if page < 1 {
-        page = 1
+		page = 1
 	}
 	if limit < 1 {
-        limit = 10
+		limit = 10
 	}
-     if page > 1 {
-        page = (page - 1)*limit
-    }
+	if page > 1 {
+		page = (page - 1) * limit
+	}
 
-    data,count := repository.FindAllEvent(search,page,limit)
+	data, count := repository.FindAllEvent(search, page, limit)
 
+	totalPage := math.Ceil(float64(count) / float64(limit))
+	next := 0
+	prev := 0
 
-    totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
+	if int(totalPage) > 1 {
+		next = int(totalPage) - page
+	}
+	if int(totalPage) > 1 {
+		prev = int(totalPage) - 1
+	}
 
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
-	
+	totalInfo := lib.TotalInfo{
+		TotalData: count,
+		TotalPage: int(totalPage),
+		Page:      page,
+		Limit:     limit,
+		Next:      next,
+		Prev:      prev,
+	}
 
-   event := dtos.Event{}
-    err := c.Bind(&event)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
+	event := dtos.Event{}
+	err := c.Bind(&event)
+	if err != nil {
+		lib.HandlerBadRequest(c, "Failed to bind data")
+		return
+	}
 
-    result := dtos.Event{}
-    for _, v := range data {
-        if v.Id == id {
-            result = v
-        }
-    }
+	result := dtos.Event{}
+	for _, v := range data {
+		if v.Id == id {
+			result = v
+		}
+	}
 
-    if result.Id == 0 {
-        c.JSON(http.StatusNotFound, lib.Message{
-            Success: false,
-            Message: "event with id " + param + " not found",
-        })
-        return
-    }
+	if result.Id == 0 {
+		lib.HandlerNotFound(c, "event with id "+param+" not found")
+		return
+	}
 
-    idEvent := 0
-    for _, v := range data {
-        idEvent = v.Id
-    }
-    event.Id = idEvent
-    
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "Event  id " + param + " edit Success",
-        ResultsInfo: totalInfo,
-        Results:event,
-    })
+	idEvent := 0
+	for _, v := range data {
+		idEvent = v.Id
+	}
+	event.Id = idEvent
+
+	lib.HandlerOk(c, "Event id "+param+" edit Success", totalInfo, event)
+
 }
 
 func DetailEventSections(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	data,err := repository.FindSectionsByEvent(id)
-	fmt.Println(id)
+	data, err := repository.FindSectionsByEvent(id)
 
-    if err != nil {
-        c.JSON(http.StatusNotFound, lib.Message{
-			Success: false,
-			Message: "events sections Not Found",
-		})
-    }
+	if err != nil {
+		lib.HandlerNotFound(c, "events sections Not Found")
+		return
+	}
 
-    c.JSON(http.StatusOK, lib.Message{
-        Success: true,
-        Message: "events sections Found",
-        Results: data,
-    })
+	lib.HandlerOk(c, "events sections Found", nil, data)
 }
 func ListAllPaymentMethod(c *gin.Context){
     search := c.Query("search")
-    page,_ := strconv.Atoi(c.Query("page"))
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	
+	page, _ := strconv.Atoi(c.Query("page"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+
 	if page < 1 {
-        page = 1
+		page = 1
 	}
 	if limit < 1 {
-        limit = 10
+		limit = 10
 	}
-    if page > 1 {
-        page = (page - 1)*limit
-    }
-    listPayment,count := repository.FindAllPaymentMethod(search,page,limit)
-
-    totalPage := math.Ceil(float64(count)/float64(limit))
-    next := 0 
-    prev := 0
-
-    if int(totalPage)> 1 {
-        next = int(totalPage) - page
-    }
-    if int(totalPage)> 1 {
-        prev = int(totalPage) - 1
-    }
-     totalInfo := lib.TotalInfo{
-        TotalData: count,
-        TotalPage: int(totalPage),
-        Page: page,
-        Limit: limit,
-        Next: next,
-        Prev: prev,
-    }
-		c.JSON(http.StatusOK, lib.Message{
-			Success: true,
-			Message: "success",
-            ResultsInfo: totalInfo,
-			Results: listPayment,
-		})	
+	if page > 1 {
+		page = (page - 1) * limit
 	}
-// repository.EditEvent(*event.Image,*event.Title,event.Date,*event.Descriptions, *event.LocationId, event.CreateBy, param)
+	listPayment, count := repository.FindAllPaymentMethod(search, page, limit)
+
+	totalPage := math.Ceil(float64(count) / float64(limit))
+	next := 0
+	prev := 0
+
+	if int(totalPage) > 1 {
+		next = int(totalPage) - page
+	}
+	if int(totalPage) > 1 {
+		prev = int(totalPage) - 1
+	}
+
+	totalInfo := lib.TotalInfo{
+		TotalData: count,
+		TotalPage: int(totalPage),
+		Page:      page,
+		Limit:     limit,
+		Next:      next,
+		Prev:      prev,
+	}
+
+	lib.HandlerOk(c, "success", totalInfo, listPayment)
+	}
