@@ -90,7 +90,7 @@ func UpdateProfile(c *gin.Context) {
 		"user":    dataProfile,
 	})
 			}
-			func UploadProfileImage(c *gin.Context) {
+	func UploadProfileImage(c *gin.Context) {
 				id := c.GetInt("userId")
 				maxFile := 100 * 1024 * 1024
 				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))

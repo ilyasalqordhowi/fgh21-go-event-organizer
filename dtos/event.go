@@ -2,7 +2,7 @@ package dtos
 
 type Event struct {
 	Id            int`json:"id"`
-	Image       string `json:"image" form:"image" db:"image"`
+	Image       *string `json:"image" db:"image"`
 	Title      string `json:"title" form:"title" db:"title"`
 	Date     string `json:"date" form:"date" db:"date"`
 	Descriptions string`json:"descriptions" form:"descriptions" db:"descriptions"`

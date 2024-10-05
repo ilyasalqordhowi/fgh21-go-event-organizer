@@ -138,3 +138,21 @@ func EditEvent(Image string, Title string, Date int,Descriptions string, Locatio
 }
 
 
+func UploadImageEvent(data dtos.Event) (dtos.Event,error) {
+    db := lib.DB()
+    defer db.Close(context.Background())
+
+    sql := `INSERT INTO events ("image") VALUES ($1) RETURNING *`
+    
+    row, err := db.Query(context.Background(), sql, data.Image, )
+    fmt.Println(row ,"ini modulnya")
+    if err != nil {
+        return dtos.Event{}, nil
+    }
+
+    profile, err := pgx.CollectOneRow(row, pgx.RowToStructByName[dtos.Event])
+    if err != nil {
+        return dtos.Event{}, nil
+    }
+    return profile, nil
+}

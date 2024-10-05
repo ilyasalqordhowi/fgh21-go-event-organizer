@@ -1,10 +1,15 @@
 package controllers
 
 import (
+	"fmt"
 	"math"
+	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
@@ -234,3 +239,47 @@ func ListAllPaymentMethod(c *gin.Context){
 
 	lib.HandlerOk(c, "success", totalInfo, listPayment)
 	}
+    func UploadImage(c *gin.Context) {
+        fmt.Println("UploadImage handler called")
+        maxFile := 100 * 1024 * 1024
+        c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
+    
+        file, err := c.FormFile("eventImg")
+ 
+        if err != nil {
+            if err.Error() == "http: request body too large" {
+                lib.HandlerMaxFile(c, "file size too large, max capacity 100 mb")
+                return
+            }
+            lib.HandlerBadRequest(c, "not file to upload")
+            return
+        }
+      
+    
+        allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
+        fileExt := strings.ToLower(filepath.Ext(file.Filename))
+        if !allowExt[fileExt] {
+            lib.HandlerBadRequest(c, "extension file not validate")
+            return
+        }
+    
+        newFile := uuid.New().String() + fileExt
+        uploadDir := "./img/event/"
+        if err := c.SaveUploadedFile(file, uploadDir+newFile); err != nil {
+            lib.HandlerBadRequest(c, "upload failed")
+            return
+        }
+    
+        dataImg := "http://localhost:8888/img/event/" + newFile
+      
+    
+   
+    
+        event, err := repository.UploadImageEvent(dtos.Event{Image: &dataImg})
+        if err != nil {
+            lib.HandlerBadRequest(c, "Failed to save image to database")
+            return
+        }
+    
+        lib.HandlerOk(c, "Upload success", nil, event)
+    }

@@ -11,6 +11,7 @@ func EventRouter(r *gin.RouterGroup){
 	r.PATCH("/:id",controllers.UpdateEvent)
 	r.DELETE("/:id",controllers.DeleteEvent)
 	r.GET("/:id",controllers.DetailEvent)
+	r.POST("/img",controllers.UploadImage)
 	r.Use(middlewares.AuthMiddleware())
 	r.POST("",controllers.CreateEvent)
 	r.GET("/data",controllers.DetailCreateEvent)
