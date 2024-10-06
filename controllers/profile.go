@@ -124,7 +124,7 @@ func UpdateProfile(c *gin.Context) {
 					return
 				}
 			
-				dataImg := "http://localhost:8888/img/profile/" + newFile
+				dataImg := "http://103.93.58.89:20203/img/profile/" + newFile
 				delImgBefore := repository.FindOneProfile(id)
 			
 				if delImgBefore.Picture != nil {
