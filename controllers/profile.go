@@ -2,14 +2,9 @@ package controllers
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
@@ -90,55 +85,35 @@ func UpdateProfile(c *gin.Context) {
 		"user":    dataProfile,
 	})
 			}
-	func UploadProfileImage(c *gin.Context) {
+			func UploadProfileImage(c *gin.Context) {
+				
 				id := c.GetInt("userId")
-				maxFile := 100 * 1024 * 1024
-				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
-			
-				file, err := c.FormFile("profileImg")
-			
-				if err != nil {
-					if err.Error() == "http: request body too large" {
-						lib.HandlerMaxFile(c, "file size too large, max capacity 100 mb")
-						return
-					}
-					lib.HandlerBadRequest(c, "not file to upload")
-					return
-				}
 				if id == 0 {
 					lib.HandlerBadRequest(c, "User not found")
 					return
 				}
 			
-				allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
-				fileExt := strings.ToLower(filepath.Ext(file.Filename))
-				if !allowExt[fileExt] {
-					lib.HandlerBadRequest(c, "extension file not validate")
+			
+				if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+					lib.HandlerBadRequest(c, "error parsing form")
 					return
 				}
 			
-				newFile := uuid.New().String() + fileExt
-				uploadDir := "./img/profile/"
-				if err := c.SaveUploadedFile(file, uploadDir+newFile); err != nil {
-					lib.HandlerBadRequest(c, "upload failed")
-					return
-				}
-			
-				dataImg := "/img/profile/" + newFile
-				delImgBefore := repository.FindOneProfile(id)
-			
-				if delImgBefore.Picture != nil {
-					fileDel := strings.Split(*delImgBefore.Picture, "8000")[1]
-					fmt.Println("file :", fileDel)
-					os.Remove("." + fileDel)
-				}
-			
-				profile, err := repository.UpdateProfileImage(dtos.Profile{Picture: &dataImg}, id)
+				
+				file, err := c.FormFile("profileImg")
 				if err != nil {
+					fmt.Println("Error while getting file:", err)
+					lib.HandlerBadRequest(c, "no file to upload")
+					return
+				}
+			
+			
+				if err := c.SaveUploadedFile(file, "./img/profile/"+file.Filename); err != nil {
 					lib.HandlerBadRequest(c, "upload failed")
 					return
 				}
 			
-				lib.HandlerOk(c, "Upload success", nil, profile)
+				lib.HandlerOk(c, "Upload success", nil, nil)
 			}
+			
 		

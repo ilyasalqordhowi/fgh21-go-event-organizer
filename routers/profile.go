@@ -7,7 +7,7 @@ import (
 )
 
 func ProfileRouter(r *gin.RouterGroup){
-	// r.GET("", controllers.ListAllProfile)
+	
 	r.GET("/national/:id", controllers.ListOneNational)
 	r.GET("/national", controllers.ListAllNational)
 	r.Use(middlewares.AuthMiddleware())
