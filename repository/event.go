@@ -156,3 +156,24 @@ func UploadImageEvent(data dtos.Event) (dtos.Event,error) {
     }
     return profile, nil
 }
+
+func EventByCategory(id int)([]dtos.Event,error){
+    db := lib.DB()
+	defer db.Close(context.Background())
+
+	sql := `SELECT ec.id, e.image, e.title, e."date", e.descriptions, e.location_id, e.created_by FROM categories c
+			JOIN events_categories ec ON ec.event_id = c.id
+			JOIN events e ON ec.event_id = e.id
+			WHERE ec.category_id = $1`
+	
+            fmt.Println(sql,"ini query")
+	query, err := db.Query(context.Background(), sql, id)
+	if err != nil {
+		return []dtos.Event{}, err
+	}
+	rows, err := pgx.CollectRows(query, pgx.RowToStructByPos[dtos.Event])
+	if err != nil {
+		return []dtos.Event{}, err
+	}
+	return rows, err
+}

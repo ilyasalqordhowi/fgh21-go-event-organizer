@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func FindAllCategories(search string, page int,limit int) ([]models.Categories,int) {
+func FindAllCategories(search string, page int,limit int) ([]models.Categories) {
 	db := lib.DB()
 	defer db.Close(context.Background())
 	offset := (page - 1) * limit
@@ -24,8 +24,8 @@ func FindAllCategories(search string, page int,limit int) ([]models.Categories,i
 	if err != nil {
 		fmt.Println(err)
 	}
-	result := TotalCategory(search)
-	return categories,result
+	
+	return categories
 }
 func TotalCategory(search string)int{
 	db := lib.DB()

@@ -283,3 +283,13 @@ func ListAllPaymentMethod(c *gin.Context){
     
         lib.HandlerOk(c, "Upload success", nil, event)
     }
+	func FindEventsByCategory (ctx *gin.Context) {
+		id, _ := strconv.Atoi(ctx.Param("id"))
+		dataCategory, err := repository.EventByCategory(id)
+		fmt.Println(err)
+		if err != nil {
+			lib.HandlerNotFound(ctx, "Data not found")
+			return
+		}
+		lib.HandlerOk(ctx, "List Events  Category", nil, dataCategory)
+	}

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"math"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -18,34 +17,12 @@ func ListAllCategory(c *gin.Context){
 		page = 1
 	}
 	if limit < 1 {
-		limit = 5
+		limit = 10
 	}
-	if page > 1 {
-		page = (page - 1) * limit
-	}
+	
 
-	listCategory, count := repository.FindAllCategories(search, page, limit)
-	totalPage := math.Ceil(float64(count) / float64(limit))
-	next := 0
-	prev := 0
-
-	if int(totalPage) > 1 {
-		next = int(totalPage) - page
-	}
-	if int(totalPage) > 1 {
-		prev = int(totalPage) - 1
-	}
-
-	totalInfo := lib.TotalInfo{
-		TotalData: count,
-		TotalPage: int(totalPage),
-		Page:      page,
-		Limit:     limit,
-		Next:      next,
-		Prev:      prev,
-	}
-
-	lib.HandlerOk(c, "success", totalInfo, listCategory)
+	listCategory := repository.FindAllCategories(search, page, limit)
+	lib.HandlerOk(c, "success", nil, listCategory)
 
 	}
 func DetailCategory(c *gin.Context) {
@@ -106,33 +83,14 @@ func UpdateCategory(c *gin.Context) {
 		page = 1
 	}
 	if limit < 1 {
-		limit = 5
+		limit = 1000
 	}
 	if page > 1 {
 		page = (page - 1) * limit
 	}
 
-	data, count := repository.FindAllCategories(search, page, limit)
-	totalPage := math.Ceil(float64(count) / float64(limit))
-	next := 0
-	prev := 0
-
-	if int(totalPage) > 1 {
-		next = int(totalPage) - page
-	}
-	if int(totalPage) > 1 {
-		prev = int(totalPage) - 1
-	}
-
-	totalInfo := lib.TotalInfo{
-		TotalData: count,
-		TotalPage: int(totalPage),
-		Page:      page,
-		Limit:     limit,
-		Next:      next,
-		Prev:      prev,
-	}
-
+	data := repository.FindAllCategories(search, page, limit)
+	
 	category := models.Categories{}
 	err := c.Bind(&category)
 	if err != nil {
@@ -153,5 +111,5 @@ func UpdateCategory(c *gin.Context) {
 	}
 
 	category.Id = result.Id
-	lib.HandlerOk(c, "Category id "+param+" edit success", totalInfo, category)
+	lib.HandlerOk(c, "Category id "+param+" edit success", nil, category)
 }
