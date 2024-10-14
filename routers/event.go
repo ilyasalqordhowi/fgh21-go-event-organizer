@@ -12,10 +12,10 @@ func EventRouter(r *gin.RouterGroup){
 	r.DELETE("/:id",controllers.DeleteEvent)
 	r.GET("/:id",controllers.DetailEvent)
 	r.POST("/img",controllers.UploadImage)
+	r.GET("/category/:id", controllers.FindEventsByCategory)
 	r.Use(middlewares.AuthMiddleware())
 	r.POST("",controllers.CreateEvent)
 	r.GET("/data",controllers.DetailCreateEvent)
 	r.GET("/section/:id", controllers.DetailEventSections)
 	r.GET("/payment_method", controllers.ListAllPaymentMethod)
-	r.GET("/category/:id", controllers.FindEventsByCategory)
 }
