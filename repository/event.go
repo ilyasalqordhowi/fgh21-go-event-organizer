@@ -185,10 +185,11 @@ func FindEventWithPagination(search string, limit int, page int) []models.EventL
 	offset := (page - 1) * limit
 	sql := `SELECT e.id, e.image, e.title, e.date, e.descriptions, l.name as location, e.created_by FROM events e
 			left JOIN location l ON e.location_id = l.id
-			WHERE e.title LIKE  '%ar%'
+			WHERE e.title like $1 
 		
 			`
-	rows, _ := db.Query(context.Background(), sql, search, limit, offset)
+	searchValue := "%" + search + "%"
+	rows, _ := db.Query(context.Background(), sql, searchValue, limit, offset)
 	
 	events, err := pgx.CollectRows(rows, pgx.RowToStructByPos[models.EventLocation])
 
