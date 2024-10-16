@@ -184,10 +184,9 @@ func FindEventWithPagination(search string, limit int, page int) []models.EventL
 
 	offset := (page - 1) * limit
 	sql := `SELECT e.id, e.image, e.title, e.date, e.descriptions, l.name as location, e.created_by FROM events e
-			JOIN location l ON e.location_id = l.id
-			WHERE e.title ILIKE '%' || $1 || '%'
-			LIMIT $2
-			OFFSET $3;
+			left JOIN location l ON e.location_id = l.id
+			WHERE e.title LIKE  '%ar%'
+		
 			`
 	rows, _ := db.Query(context.Background(), sql, search, limit, offset)
 	
