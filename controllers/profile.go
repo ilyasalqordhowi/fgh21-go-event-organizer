@@ -88,7 +88,7 @@ func UpdateProfile(c *gin.Context) {
 		"user":    dataProfile,
 	})
 			}
-			func UploadProfileImage(c *gin.Context) {
+	func UploadProfileImage(c *gin.Context) {
 				id := c.GetInt("userId")
 				fmt.Println(id)
 			
@@ -106,10 +106,15 @@ func UpdateProfile(c *gin.Context) {
 				}
 			
 				image := uuid.New().String() + fileExt
+			fmt.Println(file.Filename)
 			
 				root := "./img/profile/"
+				fmt.Println(root + image)
 				if err := c.SaveUploadedFile(file, root+image); err != nil {
+					fmt.Println(err)
+
 					lib.HandlerBadRequest(c, "Upload image failed")
+
 					return
 				}
 			
