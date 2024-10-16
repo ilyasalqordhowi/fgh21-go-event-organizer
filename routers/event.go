@@ -8,6 +8,7 @@ import (
 
 func EventRouter(r *gin.RouterGroup){
 	r.GET("", controllers.ListAllEvent)
+	r.GET("/", controllers.ListEventsWithPagination)
 	r.PATCH("/:id",controllers.UpdateEvent)
 	r.DELETE("/:id",controllers.DeleteEvent)
 	r.GET("/:id",controllers.DetailEvent)

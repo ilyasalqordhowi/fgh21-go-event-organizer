@@ -293,3 +293,17 @@ func ListAllPaymentMethod(c *gin.Context){
 		}
 		lib.HandlerOk(ctx, "List Events  Category", nil, dataCategory)
 	}
+	func ListEventsWithPagination(ctx *gin.Context) {
+		search := ctx.Query("search")
+		page, _ := strconv.Atoi(ctx.Query("page"))
+		limit, _ := strconv.Atoi(ctx.Query("limit"))
+		if page < 1 {
+			page = 1
+		}
+		if limit < 1 {
+			limit = 5
+		}
+	
+		events := repository.FindEventWithPagination(search, limit, page)
+		lib.HandlerOk(ctx, "List all events", nil, events)
+	}

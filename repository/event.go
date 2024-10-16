@@ -6,6 +6,7 @@ import (
 
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/dtos"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
+	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/models"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -176,4 +177,25 @@ func EventByCategory(id int)([]dtos.Event,error){
 		return []dtos.Event{}, err
 	}
 	return rows, err
+}
+func FindEventWithPagination(search string, limit int, page int) []models.EventLocation {
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	offset := (page - 1) * limit
+	sql := `SELECT e.id, e.image, e.title, e.date, e.descriptions, l.name as location, e.created_by FROM events e
+			JOIN location l ON e.location_id = l.id
+			WHERE e.title ILIKE '%' || $1 || '%'
+			LIMIT $2
+			OFFSET $3;
+			`
+	rows, _ := db.Query(context.Background(), sql, search, limit, offset)
+	
+	events, err := pgx.CollectRows(rows, pgx.RowToStructByPos[models.EventLocation])
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return events
 }
