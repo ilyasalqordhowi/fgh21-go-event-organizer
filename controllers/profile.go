@@ -106,10 +106,10 @@ func UpdateProfile(c *gin.Context) {
 				}
 			
 				image := uuid.New().String() + fileExt
-			fmt.Println(file.Filename)
+			
 			
 				root := "./img/profile/"
-				fmt.Println(root + image)
+				
 				if err := c.SaveUploadedFile(file, root+image); err != nil {
 					fmt.Println(err)
 
@@ -118,7 +118,7 @@ func UpdateProfile(c *gin.Context) {
 					return
 				}
 			
-				img := "http://103.93.58.89:21213/image/profile/" + image
+				img := "http://103.93.58.89:21213/img/profile/" + image
 				result, err := repository.UpdateProfileImage(dtos.Profile{Picture: &img}, id)
 			
 				if err != nil {
