@@ -113,7 +113,7 @@ func UpdateProfile(c *gin.Context) {
 					return
 				}
 			
-				img := "http://103.93.58.89:21213/image/" + image
+				img := "http://103.93.58.89:21213/image/profile/" + image
 				result, err := repository.UpdateProfileImage(dtos.Profile{Picture: &img}, id)
 			
 				if err != nil {
