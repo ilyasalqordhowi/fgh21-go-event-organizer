@@ -43,7 +43,7 @@ func ListAllProfile(r *gin.Context) {
 }
 func DetailUsersProfile(ctx *gin.Context) {
 	id := ctx.GetInt("userId")
-	data := repository.FindOneProfile(id)
+	data,_ := repository.FindOneProfile(id)
 	dataUser := repository.FindOneUser(id)
 	fmt.Println(data, "helo")
 
@@ -69,7 +69,7 @@ func UpdateProfile(c *gin.Context) {
 
 	err := c.Bind(&form)
 	errUser := c.Bind(&user)
-	data := repository.FindOneProfile(id)
+	data,_ := repository.FindOneProfile(id)
 	dataProfile := repository.FindOneUser(id)
 
 	if err != nil {
@@ -90,14 +90,14 @@ func UpdateProfile(c *gin.Context) {
 		"user":    dataProfile,
 	})
 			}
-	func UploadProfileImage(c *gin.Context) {
+			func UploadProfileImage(c *gin.Context) {
 				id := c.GetInt("userId")
 				maxFile := 500 * 1024
 				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
 
 				file, err := c.FormFile("profileImg")
 				fmt.Println(err)
-				// upload lgi
+			
 				if err != nil {
 					if err.Error() == "http: request body too large" {
 						lib.HandlerMaxFile(c, "file size too large, max capacity 500 kb")
@@ -122,7 +122,7 @@ func UpdateProfile(c *gin.Context) {
 				}
 			
 				dataImg := "/img/profile/" + newFile
-				delImgBefore := repository.FindOneProfile(id)
+				delImgBefore,err := repository.FindOneProfile(id)
 			
 				if delImgBefore.Picture != nil {
 					fileDel := strings.Split(*delImgBefore.Picture, "8000")[1]

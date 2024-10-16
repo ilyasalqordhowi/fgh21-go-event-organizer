@@ -53,21 +53,21 @@ func CreateProfile(joinRegist dtos.JoinRegist) ( *dtos.Profile , error) {
     fmt.Println(&profile,"masuk")
     return &profile, nil
 }
-func FindOneProfile(id int) dtos.Profile {
+func FindOneProfile(id int) (dtos.Profile, error) {
    db := lib.DB()
 	defer db.Close(context.Background())
 
-	rows, _ := db.Query(context.Background(),
+	rows, err:= db.Query(context.Background(),
 		`select * from "profile" where "user_id" = $1`, id,
 	)
-	profile, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[dtos.Profile])
-	fmt.Println(err)
 	if err != nil {
-		fmt.Println(err)
+		return dtos.Profile{}, err
 	}
-	fmt.Println(profile)
-
-	return profile
+	profile, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[dtos.Profile])
+	if err != nil {
+		return dtos.Profile{}, err
+	}
+	return profile,nil
 }
 
 func FindAllProfile() []dtos.Profile {
@@ -120,7 +120,7 @@ func FindAllNational() []models.Nationality {
 	}
 
 
-func UpdateProfileImage(data dtos.Profile,id int) (dtos.Profile,error) {
+	func UpdateProfileImage(data dtos.Profile,id int) (dtos.Profile,error) {
 		db := lib.DB()
 		defer db.Close(context.Background())
 	
