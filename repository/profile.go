@@ -120,14 +120,13 @@ func FindAllNational() []models.Nationality {
 	}
 
 
-	func UpdateProfileImage(data dtos.Profile,id int) (dtos.Profile,error) {
+	func UpdateProfileImage(data dtos.Profile, id int) (dtos.Profile, error) {
 		db := lib.DB()
 		defer db.Close(context.Background())
 	
-		sql := `UPDATE profile SET "picture" = $1 WHERE user_id=$2 returning *`
-		
+		sql := `UPDATE profile SET picture = $1 WHERE user_id=$2 returning *`
+	
 		row, err := db.Query(context.Background(), sql, data.Picture, id)
-		fmt.Println(row ,"ini modulnya")
 		if err != nil {
 			return dtos.Profile{}, nil
 		}
@@ -136,5 +135,6 @@ func FindAllNational() []models.Nationality {
 		if err != nil {
 			return dtos.Profile{}, nil
 		}
+	
 		return profile, nil
 	}

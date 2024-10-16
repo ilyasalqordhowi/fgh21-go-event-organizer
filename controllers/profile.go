@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -92,50 +90,37 @@ func UpdateProfile(c *gin.Context) {
 			}
 			func UploadProfileImage(c *gin.Context) {
 				id := c.GetInt("userId")
-				maxFile := 500 * 1024
-				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
-
-				file, err := c.FormFile("profileImg")
-				fmt.Println(err)
+				fmt.Println(id)
 			
+				file, err := c.FormFile("image")
 				if err != nil {
-					if err.Error() == "http: request body too large" {
-						lib.HandlerMaxFile(c, "file size too large, max capacity 500 kb")
-						return
-					}
-					lib.HandlerBadRequest(c, "not file to upload")
+					lib.HandlerBadRequest(c, "no files uploaded")
 					return
 				}
 			
 				allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
 				fileExt := strings.ToLower(filepath.Ext(file.Filename))
 				if !allowExt[fileExt] {
-					lib.HandlerBadRequest(c, "extension file not validate")
+					lib.HandlerBadRequest(c, "invalid file extension")
 					return
 				}
 			
-				newFile := uuid.New().String() + fileExt
-				uploadDir := "./img/profile/"
-				if err := c.SaveUploadedFile(file, uploadDir+newFile); err != nil {
-					lib.HandlerBadRequest(c, "upload failed")
+				image := uuid.New().String() + fileExt
+			
+				root := "./img/profile/"
+				if err := c.SaveUploadedFile(file, root+image); err != nil {
+					lib.HandlerBadRequest(c, "Upload image failed")
 					return
 				}
 			
-				dataImg := "/img/profile/" + newFile
-				delImgBefore,err := repository.FindOneProfile(id)
+				img := "http://103.93.58.89:21213/image/" + image
+				result, err := repository.UpdateProfileImage(dtos.Profile{Picture: &img}, id)
 			
-				if delImgBefore.Picture != nil {
-					fileDel := strings.Split(*delImgBefore.Picture, "8000")[1]
-					fmt.Println("file :", fileDel)
-					os.Remove("." + fileDel)
-				}
-			
-				profile, err := repository.UpdateProfileImage(dtos.Profile{Picture: &dataImg}, id)
 				if err != nil {
-					lib.HandlerBadRequest(c, "upload failed")
+					lib.HandlerBadRequest(c, "Update image failed")
 					return
 				}
 			
-				lib.HandlerOk(c, "Upload success", nil, profile)
+				lib.HandlerOk(c, "Upload image success", nil, result)
 			}
-		
+			
