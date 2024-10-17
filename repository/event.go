@@ -145,7 +145,7 @@ func UploadImageEvent(data dtos.Event) (dtos.Event,error) {
 
     sql := `INSERT INTO events ("image") VALUES ($1) RETURNING *`
     
-    row, err := db.Query(context.Background(), sql, data.Image, )
+    row, err := db.Query(context.Background(), sql, data.Image)
     fmt.Println(row ,"ini modulnya")
     if err != nil {
         return dtos.Event{}, nil
@@ -157,6 +157,7 @@ func UploadImageEvent(data dtos.Event) (dtos.Event,error) {
     }
     return profile, nil
 }
+
 
 func EventByCategory(id int)([]dtos.Event,error){
     db := lib.DB()

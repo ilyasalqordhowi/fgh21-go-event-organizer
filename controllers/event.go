@@ -270,7 +270,7 @@ func ListAllPaymentMethod(c *gin.Context){
             return
         }
     
-        dataImg := "http://localhost:8888/img/event/" + newFile
+        dataImg := "http://103.93.58.89:21213/img/event/" + newFile
       
     
    
