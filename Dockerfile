@@ -1,26 +1,24 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.23-alpine AS build
 
 WORKDIR /app
-
-
-COPY go.mod go.sum ./
-
-RUN go mod tidy
 
 
 COPY . .
 
+RUN go mod tidy
 
-RUN go build -o binary
+
+
+RUN go build -v -o /app/goback 
 
 FROM alpine:latest
 
-
 WORKDIR /app
 
-COPY --from=builder /app/binary /app/binary
+COPY --from=build /app /app
 
+ENV PATH="/app:${PATH}"
 
 EXPOSE 8888
 
-ENTRYPOINT [ "/app/binary" ]
+ENTRYPOINT [ "goback" ]

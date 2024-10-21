@@ -56,7 +56,7 @@ func ListAllEvent(c *gin.Context){
 func DetailEvent(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	data := repository.FindOneEvent(id)
-
+fmt.Println(data)
 	if data.Id == id {
 		lib.HandlerOk(c, "events Found", nil, data)
 	} else {
@@ -70,37 +70,7 @@ func DetailCreateEvent(c *gin.Context) {
 	lib.HandlerOk(c, "Event Found", nil, dataEvent)
 
 }
-func CreateEvent(ctx *gin.Context) {
-    var newEvent dtos.Event
-	id, exists := ctx.Get("userId")
 
-	if !exists {
-		lib.HandlerUnauthorized(ctx, "Unauthorized")
-		return
-	}
-
-	userId, ok := id.(int)
-	if !ok {
-		lib.HandlerBadRequest(ctx, "Invalid user ID")
-		return
-	}
-
-	if err := ctx.ShouldBind(&newEvent); err != nil {
-		lib.HandlerBadRequest(ctx, "Invalid input data")
-		return
-	}
-
-	err := repository.CreateEvents(newEvent, userId)
-	if err != nil {
-		lib.HandlerBadRequest(ctx, "Failed to create event")
-		return
-	}
-
-	newEvent.CreateBy = &userId
-
-	lib.HandlerOk(ctx, "Event created successfully", nil, newEvent)
-
-}
 
 func DeleteEvent(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
@@ -239,71 +209,83 @@ func ListAllPaymentMethod(c *gin.Context){
 
 	lib.HandlerOk(c, "success", totalInfo, listPayment)
 	}
-    func UploadImage(c *gin.Context) {
-        fmt.Println("UploadImage handler called")
-        maxFile := 100 * 1024 * 1024
-        c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
-    
-        file, err := c.FormFile("eventImg")
- 
-        if err != nil {
-            if err.Error() == "http: request body too large" {
-                lib.HandlerMaxFile(c, "file size too large, max capacity 100 mb")
-                return
-            }
-            lib.HandlerBadRequest(c, "not file to upload")
-            return
-        }
-      
-    
-        allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
-        fileExt := strings.ToLower(filepath.Ext(file.Filename))
-        if !allowExt[fileExt] {
-            lib.HandlerBadRequest(c, "extension file not validate")
-            return
-        }
-    
-        newFile := uuid.New().String() + fileExt
-        uploadDir := "./img/event/"
-        if err := c.SaveUploadedFile(file, uploadDir+newFile); err != nil {
-            lib.HandlerBadRequest(c, "upload failed")
-            return
-        }
-    
-        dataImg := "http://103.93.58.89:21213/img/event/" + newFile
-      
-    
-   
-    
-        event, err := repository.UploadImageEvent(dtos.Event{Image: &dataImg})
-        if err != nil {
-            lib.HandlerBadRequest(c, "Failed to save image to database")
-            return
-        }
-    
-        lib.HandlerOk(c, "Upload success", nil, event)
-    }
-	func FindEventsByCategory (ctx *gin.Context) {
-		id, _ := strconv.Atoi(ctx.Param("id"))
-		dataCategory, err := repository.EventByCategory(id)
-		fmt.Println(err)
-		if err != nil {
-			lib.HandlerNotFound(ctx, "Data not found")
+
+func FindEventsByCategory (ctx *gin.Context) {
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	dataCategory, err := repository.EventByCategory(id)
+	fmt.Println(err)
+	if err != nil {
+		lib.HandlerNotFound(ctx, "Data not found")
+		return
+	}
+	lib.HandlerOk(ctx, "List Events  Category", nil, dataCategory)
+}
+func ListEventsWithPagination(ctx *gin.Context) {
+	search := ctx.Query("search")
+	page, _ := strconv.Atoi(ctx.Query("page"))
+	limit, _ := strconv.Atoi(ctx.Query("limit"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 5
+	}
+
+	events := repository.FindEventWithPagination(search, limit, page)
+	lib.HandlerOk(ctx, "List all events", nil, events)
+}
+func CreateEventNew(c *gin.Context) {
+	id := c.GetInt("userId")
+
+	maxFile := 500 * 1024
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxFile))
+
+	file, err := c.FormFile("image")
+	var form dtos.Event
+	location, _ := strconv.Atoi(c.PostForm("locationId"))
+	form.Title = c.PostForm("title")
+	form.Date = c.PostForm("date")
+	form.Descriptions = c.PostForm("descriptions")
+	form.LocationId = &location
+	if err != nil {
+		if err.Error() == "http: request body too large" {
+			lib.HandlerMaxFile(c, "file size too large, max capacity 500 kb")
 			return
 		}
-		lib.HandlerOk(ctx, "List Events  Category", nil, dataCategory)
+		lib.HandlerBadRequest(c, "not file to upload")
+		return
 	}
-	func ListEventsWithPagination(ctx *gin.Context) {
-		search := ctx.Query("search")
-		page, _ := strconv.Atoi(ctx.Query("page"))
-		limit, _ := strconv.Atoi(ctx.Query("limit"))
-		if page < 1 {
-			page = 1
-		}
-		if limit < 1 {
-			limit = 5
-		}
-	
-		events := repository.FindEventWithPagination(search, limit, page)
-		lib.HandlerOk(ctx, "List all events", nil, events)
+
+	allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
+	fileExt := strings.ToLower(filepath.Ext(file.Filename))
+	if !allowExt[fileExt] {
+		lib.HandlerBadRequest(c, "extension file not validate")
+		return
 	}
+
+	newFile := uuid.New().String() + fileExt
+
+	dirUpload := "./img/event/"
+
+	if err := c.SaveUploadedFile(file, dirUpload+newFile); err != nil {
+		lib.HandlerBadRequest(c, "file not upload")
+		return
+	}
+	images := "http://103.93.58.89:21213/img/event/" + newFile
+
+	event, err := repository.CreateEventNew(dtos.Event{
+		Image:       &images,
+		Title:       form.Title,
+		Date:        form.Date,
+		Descriptions: form.Descriptions,
+		LocationId:  form.LocationId,
+		CreateBy:   &id,
+	})
+	if err != nil {
+		fmt.Println(err)
+		lib.HandlerBadRequest(c, "Create Failed")
+		return
+	}
+
+	lib.HandlerOk(c, "Create event success", event, nil)
+}

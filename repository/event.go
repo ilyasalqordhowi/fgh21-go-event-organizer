@@ -45,9 +45,10 @@ func FindOneEvent(id int) dtos.Event {
 	defer db.Close(context.Background())
 
 	rows,_ := db.Query(context.Background(),
-		`select * from "events"`,
+		`select * from "events" where id = $1`,id,
 	)
 	event, err := pgx.CollectRows(rows, pgx.RowToStructByPos[dtos.Event])
+	fmt.Println(event)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -79,36 +80,8 @@ func FindOneByEvent(id int) []dtos.Event {
 
     return events
 }
-func CreateEvents(event dtos.Event, id int) error {
-    db := lib.DB()
-    defer db.Close(context.Background())
 
-    _, err := db.Exec(
-        context.Background(),
-        `INSERT INTO "events" ("image", "title", "date", "descriptions", "location_id", "created_by") VALUES ($1, $2, $3, $4, $5, $6)`,
-        event.Image, event.Title, event.Date, event.Descriptions, event.LocationId, id,
-    )
-    fmt.Println(err)
-    if err != nil {
-        return fmt.Errorf("failed to execute insert")
-    }
-    return nil
-}
-func CreateEvent(event dtos.Event, id int) error {
-    db := lib.DB()
-    defer db.Close(context.Background())
 
-    _, err := db.Exec(
-        context.Background(),
-        `insert into "events" (image, title, date, descriptions, location_id, created_by) values ($1, $2, $3, $4, $5, $6)`,
-        event.Image, event.Title, event.Date, event.Descriptions, event.LocationId, id,
-    )
-    if err != nil {
-		return fmt.Errorf("failed to execute insert")
-    }
-	
-    return nil
-}
 func RemoveEvent(id int) error {
     db := lib.DB()
     defer db.Close(context.Background())
@@ -139,37 +112,19 @@ func EditEvent(Image string, Title string, Date int,Descriptions string, Locatio
 }
 
 
-func UploadImageEvent(data dtos.Event) (dtos.Event,error) {
-    db := lib.DB()
-    defer db.Close(context.Background())
-
-    sql := `INSERT INTO events ("image") VALUES ($1) RETURNING *`
-    
-    row, err := db.Query(context.Background(), sql, data.Image)
-    fmt.Println(row ,"ini modulnya")
-    if err != nil {
-        return dtos.Event{}, nil
-    }
-
-    profile, err := pgx.CollectOneRow(row, pgx.RowToStructByName[dtos.Event])
-    if err != nil {
-        return dtos.Event{}, nil
-    }
-    return profile, nil
-}
 
 
 func EventByCategory(id int)([]dtos.Event,error){
     db := lib.DB()
 	defer db.Close(context.Background())
-
+	
 	sql := `SELECT ec.id, e.image, e.title, e."date", e.descriptions, e.location_id, e.created_by FROM categories c
 			JOIN events_categories ec ON ec.event_id = c.id
 			JOIN events e ON ec.event_id = e.id
 			WHERE ec.category_id = $1`
 	
             fmt.Println(sql,"ini query")
-	query, err := db.Query(context.Background(), sql, id)
+			query, err := db.Query(context.Background(), sql, id)
 	if err != nil {
 		return []dtos.Event{}, err
 	}
@@ -185,12 +140,12 @@ func FindEventWithPagination(search string, limit int, page int) []models.EventL
 
 	offset := (page - 1) * limit
 	sql := `SELECT e.id, e.image, e.title, e.date, e.descriptions, l.name as location, e.created_by FROM events e
-			left JOIN location l ON e.location_id = l.id
-			WHERE e.title like $1 
-		
+			LEFT JOIN location l ON e.location_id = l.id
+			WHERE e.title ILIKE '%' || $1 || '%'
+			LIMIT $2
+			OFFSET $3;
 			`
-	searchValue := "%" + search + "%"
-	rows, _ := db.Query(context.Background(), sql, searchValue, limit, offset)
+	rows, _ := db.Query(context.Background(), sql, search, limit, offset)
 	
 	events, err := pgx.CollectRows(rows, pgx.RowToStructByPos[models.EventLocation])
 
@@ -199,4 +154,22 @@ func FindEventWithPagination(search string, limit int, page int) []models.EventL
 	}
 
 	return events
+}
+
+func CreateEventNew(data dtos.Event) (dtos.Event, error) {
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	sql := `INSERT INTO "events" ("image", "title", "date", "descriptions", "location_id", "created_by") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`
+	row, err := db.Query(context.Background(), sql, data.Image, data.Title, data.Date, data.Descriptions, data.LocationId, data.CreateBy)
+	if err != nil {
+		return dtos.Event{}, err
+	}
+
+	events, err := pgx.CollectOneRow(row, pgx.RowToStructByName[dtos.Event])
+	if err != nil {
+		fmt.Println("sini")
+		return dtos.Event{}, err
+	}
+	return events, err
 }

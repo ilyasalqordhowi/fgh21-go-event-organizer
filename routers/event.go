@@ -8,14 +8,13 @@ import (
 
 func EventRouter(r *gin.RouterGroup){
 	r.GET("", controllers.ListAllEvent)
-	r.GET("/", controllers.ListEventsWithPagination)
+	r.GET("/pagination", controllers.ListEventsWithPagination)
 	r.PATCH("/:id",controllers.UpdateEvent)
 	r.DELETE("/:id",controllers.DeleteEvent)
 	r.GET("/:id",controllers.DetailEvent)
-	r.POST("/img",controllers.UploadImage)
 	r.GET("/category/:id", controllers.FindEventsByCategory)
 	r.Use(middlewares.AuthMiddleware())
-	r.POST("",controllers.CreateEvent)
+	r.POST("",controllers.CreateEventNew)
 	r.GET("/data",controllers.DetailCreateEvent)
 	r.GET("/section/:id", controllers.DetailEventSections)
 	r.GET("/payment_method", controllers.ListAllPaymentMethod)
