@@ -10,13 +10,13 @@ func main() {
 	r := gin.Default()
 	r.Static("/img/profile", "./img/profile")
 	r.Static("/img/event", "./img/event")
-	
-    corsConfig := cors.DefaultConfig()
-    corsConfig.AllowAllOrigins = true
-    corsConfig.AllowHeaders = []string{
-        "Origin", "Content-Type", "Authorization", "Content-Length",
-    }
-    r.Use(cors.New(corsConfig))
+
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = []string{
+		"Origin", "Content-Type", "Authorization", "Content-Length",
+	}
+	r.Use(cors.New(corsConfig))
 	routers.RouterCombine(r)
 	r.Run("0.0.0.0:8888")
 }

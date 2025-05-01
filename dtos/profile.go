@@ -15,5 +15,6 @@ type JoinRegist struct {
 	Id       int     `json:"id"`
 	Email    *string `json:"email"  binding:"required,email" form:"email" db:"email"`
 	Password string  `json:"-" form:"password"  binding:"required" db:"password"`
+	RoleId   int     `json:"role_id" form:"role_id" db:"role_id"`
 	Results  Profile
 }

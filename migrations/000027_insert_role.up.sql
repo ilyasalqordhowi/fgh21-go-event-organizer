@@ -1,0 +1,5 @@
+insert into "role"
+("name")
+values
+('admin'),
+('user')

@@ -10,10 +10,10 @@ import (
 func DB() *pgx.Conn {
 	conn, err := pgx.Connect(
 		context.Background(),
-		"postgresql://postgres:1@103.93.58.89:54323/event_organizer?sslmode=disable",
+		"postgresql://postgres:1@143.198.222.47:54322/snagtick_be?sslmode=disable",
 	)
 	if err != nil {
 		fmt.Println(err)
 	}
-	return conn 
+	return conn
 }

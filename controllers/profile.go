@@ -35,13 +35,14 @@ func CreateProfile(ctx *gin.Context) {
 		"email":    account.Email,
 	})
 }
+
 func ListAllProfile(r *gin.Context) {
 	results := repository.FindAllProfile()
 	lib.HandlerOk(r, "List All Profile", nil, results)
 }
 func DetailUsersProfile(ctx *gin.Context) {
 	id := ctx.GetInt("userId")
-	data,_ := repository.FindOneProfile(id)
+	data, _ := repository.FindOneProfile(id)
 	dataUser := repository.FindOneUser(id)
 	fmt.Println(data, "helo")
 
@@ -49,10 +50,10 @@ func DetailUsersProfile(ctx *gin.Context) {
 		"profile": data,
 		"user":    dataUser,
 	})
-	
+
 }
 func ListOneNational(r *gin.Context) {
-	id,_ := strconv.Atoi(r.Param("id"))
+	id, _ := strconv.Atoi(r.Param("id"))
 	results := repository.FindOneNational(id)
 	lib.HandlerOk(r, "Id National", nil, results)
 }
@@ -67,7 +68,7 @@ func UpdateProfile(c *gin.Context) {
 
 	err := c.Bind(&form)
 	errUser := c.Bind(&user)
-	data,_ := repository.FindOneProfile(id)
+	data, _ := repository.FindOneProfile(id)
 	dataProfile := repository.FindOneUser(id)
 
 	if err != nil {
@@ -87,45 +88,43 @@ func UpdateProfile(c *gin.Context) {
 		"profile": data,
 		"user":    dataProfile,
 	})
-			}
-	func UploadProfileImage(c *gin.Context) {
-				id := c.GetInt("userId")
-				fmt.Println(id)
-			
-				file, err := c.FormFile("image")
-				if err != nil {
-					lib.HandlerBadRequest(c, "no files uploaded")
-					return
-				}
-			
-				allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
-				fileExt := strings.ToLower(filepath.Ext(file.Filename))
-				if !allowExt[fileExt] {
-					lib.HandlerBadRequest(c, "invalid file extension")
-					return
-				}
-			
-				image := uuid.New().String() + fileExt
-			
-			
-				root := "./img/profile/"
-				
-				if err := c.SaveUploadedFile(file, root+image); err != nil {
-					fmt.Println(err)
+}
+func UploadProfileImage(c *gin.Context) {
+	id := c.GetInt("userId")
+	fmt.Println(id)
 
-					lib.HandlerBadRequest(c, "Upload image failed")
+	file, err := c.FormFile("image")
+	if err != nil {
+		lib.HandlerBadRequest(c, "no files uploaded")
+		return
+	}
 
-					return
-				}
-			
-				img := "http://103.93.58.89:21213/img/profile/" + image
-				result, err := repository.UpdateProfileImage(dtos.Profile{Picture: &img}, id)
-			
-				if err != nil {
-					lib.HandlerBadRequest(c, "Update image failed")
-					return
-				}
-			
-				lib.HandlerOk(c, "Upload image success", nil, result)
-			}
-			
+	allowExt := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
+	fileExt := strings.ToLower(filepath.Ext(file.Filename))
+	if !allowExt[fileExt] {
+		lib.HandlerBadRequest(c, "invalid file extension")
+		return
+	}
+
+	image := uuid.New().String() + fileExt
+
+	root := "./img/profile/"
+
+	if err := c.SaveUploadedFile(file, root+image); err != nil {
+		fmt.Println(err)
+
+		lib.HandlerBadRequest(c, "Upload image failed")
+
+		return
+	}
+
+	img := "http://143.198.222.47:8888/img/profile/" + image
+	result, err := repository.UpdateProfileImage(dtos.Profile{Picture: &img}, id)
+
+	if err != nil {
+		lib.HandlerBadRequest(c, "Update image failed")
+		return
+	}
+
+	lib.HandlerOk(c, "Upload image success", nil, result)
+}

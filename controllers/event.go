@@ -14,8 +14,9 @@ import (
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/lib"
 	"github.com/ilyasalqordhowi/fgh21-go-event-organizer/repository"
 )
-func ListAllEvent(c *gin.Context){
-    search := c.Query("search")
+
+func ListAllEvent(c *gin.Context) {
+	search := c.Query("search")
 	page, _ := strconv.Atoi(c.Query("page"))
 	limit, _ := strconv.Atoi(c.Query("limit"))
 
@@ -52,11 +53,11 @@ func ListAllEvent(c *gin.Context){
 	}
 
 	lib.HandlerOk(c, "success", totalInfo, listEvent)
-	}
+}
 func DetailEvent(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	data := repository.FindOneEvent(id)
-fmt.Println(data)
+	fmt.Println(data)
 	if data.Id == id {
 		lib.HandlerOk(c, "events Found", nil, data)
 	} else {
@@ -64,15 +65,14 @@ fmt.Println(data)
 	}
 }
 func DetailCreateEvent(c *gin.Context) {
-    id := c.GetInt("userId")
+	id := c.GetInt("userId")
 	dataEvent := repository.FindOneByEvent(id)
 
 	lib.HandlerOk(c, "Event Found", nil, dataEvent)
 
 }
 
-
-func DeleteEvent(c *gin.Context){
+func DeleteEvent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	dataEvent := repository.FindOneEvent(id)
 
@@ -92,7 +92,7 @@ func DeleteEvent(c *gin.Context){
 }
 
 func UpdateEvent(c *gin.Context) {
-    param := c.Param("id")
+	param := c.Param("id")
 	id, _ := strconv.Atoi(param)
 	search := c.Query("search")
 	page, _ := strconv.Atoi(c.Query("page"))
@@ -171,8 +171,8 @@ func DetailEventSections(c *gin.Context) {
 
 	lib.HandlerOk(c, "events sections Found", nil, data)
 }
-func ListAllPaymentMethod(c *gin.Context){
-    search := c.Query("search")
+func ListAllPaymentMethod(c *gin.Context) {
+	search := c.Query("search")
 	page, _ := strconv.Atoi(c.Query("page"))
 	limit, _ := strconv.Atoi(c.Query("limit"))
 
@@ -208,9 +208,9 @@ func ListAllPaymentMethod(c *gin.Context){
 	}
 
 	lib.HandlerOk(c, "success", totalInfo, listPayment)
-	}
+}
 
-func FindEventsByCategory (ctx *gin.Context) {
+func FindEventsByCategory(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
 	dataCategory, err := repository.EventByCategory(id)
 	fmt.Println(err)
@@ -271,15 +271,15 @@ func CreateEventNew(c *gin.Context) {
 		lib.HandlerBadRequest(c, "file not upload")
 		return
 	}
-	images := "http://103.93.58.89:21213/img/event/" + newFile
+	images := "http://143.198.222.47:8888/img/event/" + newFile
 
 	event, err := repository.CreateEventNew(dtos.Event{
-		Image:       &images,
-		Title:       form.Title,
-		Date:        form.Date,
+		Image:        &images,
+		Title:        form.Title,
+		Date:         form.Date,
 		Descriptions: form.Descriptions,
-		LocationId:  form.LocationId,
-		CreateBy:   &id,
+		LocationId:   form.LocationId,
+		CreateBy:     &id,
 	})
 	if err != nil {
 		fmt.Println(err)

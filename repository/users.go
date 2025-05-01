@@ -9,32 +9,30 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-
-
-func FindAllUsers(search string ,page int,limit int) ([]dtos.User,int) {
+func FindAllUsers(search string, page int, limit int) ([]dtos.User, int) {
 	db := lib.DB()
 	defer db.Close(context.Background())
 	offset := (page - 1) * limit
-	
-	sql :=	`SELECT * FROM "users" where "email" ilike '%' || $1 || '%' offset $2 limit $3`
-	rows, _ := db.Query(context.Background(),sql,search,offset,limit)
-	
+
+	sql := `SELECT * FROM "users" where "email" ilike '%' || $1 || '%' offset $2 limit $3`
+	rows, _ := db.Query(context.Background(), sql, search, offset, limit)
+
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[dtos.User])
 
 	fmt.Println(users)
-	
+
 	if err != nil {
 		fmt.Println(err)
 	}
 	result := TotalUsers(search)
-	return users,result
+	return users, result
 }
-func TotalUsers(search string)int{
+func TotalUsers(search string) int {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
-	sql :=	`SELECT count(id) as "total" FROM "users" where "email" ilike '%' || $1 || '%'`
-	rows := db.QueryRow(context.Background(),sql,search)
+	sql := `SELECT count(id) as "total" FROM "users" where "email" ilike '%' || $1 || '%'`
+	rows := db.QueryRow(context.Background(), sql, search)
 	var results int
 	rows.Scan(
 		&results,
@@ -47,8 +45,8 @@ func FindOneUser(id int) dtos.User {
 
 	rows, _ := db.Query(
 		context.Background(),
-	`SELECT * FROM "users"`,
-)
+		`SELECT * FROM "users"`,
+	)
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByPos[dtos.User])
 
 	fmt.Println(users)
@@ -56,9 +54,9 @@ func FindOneUser(id int) dtos.User {
 	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	user := dtos.User{}
-	for _, v := range users{
+	for _, v := range users {
 		if v.Id == id {
 			user = v
 		}
@@ -70,7 +68,7 @@ func FindOneUserByEmail(email string) dtos.User {
 	defer db.Close(context.Background())
 	rows, _ := db.Query(
 		context.Background(),
-	 	`select * from "users" where "email" = $1`,
+		`select * from "users" where "email" = $1`,
 		email,
 	)
 
@@ -82,11 +80,11 @@ func FindOneUserByEmail(email string) dtos.User {
 
 	user := dtos.User{}
 	for _, val := range users {
-		if val.Email == email{
+		if val.Email == email {
 			user = val
 		}
 	}
-	return user	
+	return user
 }
 
 func Create(newUser dtos.User) dtos.User {
@@ -94,45 +92,46 @@ func Create(newUser dtos.User) dtos.User {
 	defer db.Close(context.Background())
 
 	newUser.Password = lib.Encrypt(newUser.Password)
-	
-sql := `insert into "users" ("email","password","username") values ($1,$2,$3) returning "id","email","password","username"`
-row := db.QueryRow(context.Background(),sql,newUser.Email,newUser.Password,newUser.Username)
-var results dtos.User
-row.Scan(
-	&results.Id,
-	&results.Email,
-	&results.Password,
-	&results.Username,
-)
-return results
+	fmt.Println(newUser.Password, "sini")
+
+	sql := `insert into "users" ("email","password","username") values ($1,$2,$3) returning "id","email","password","username"`
+	row := db.QueryRow(context.Background(), sql, newUser.Email, newUser.Password, newUser.Username)
+	var results dtos.User
+	row.Scan(
+		&results.Id,
+		&results.Email,
+		&results.Password,
+		&results.Username,
+	)
+	return results
 }
 func DeleteUsers(id int) error {
-    db := lib.DB()
-    defer db.Close(context.Background())
+	db := lib.DB()
+	defer db.Close(context.Background())
 
-    commandTag, err := db.Exec(
-        context.Background(),
-        `DELETE FROM "users" WHERE id = $1`,
-        id,
-    )
+	commandTag, err := db.Exec(
+		context.Background(),
+		`DELETE FROM "users" WHERE id = $1`,
+		id,
+	)
 
-    if err != nil {
-        return fmt.Errorf("failed to execute delete")
-    }
+	if err != nil {
+		return fmt.Errorf("failed to execute delete")
+	}
 
-    if commandTag.RowsAffected() == 0 {
-        return fmt.Errorf("no user found")
-    }
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("no user found")
+	}
 
-    return nil
+	return nil
 }
 func EditUser(email string, username string, password string, id string) {
-    db := lib.DB()
-    defer db.Close(context.Background())
+	db := lib.DB()
+	defer db.Close(context.Background())
 
-    dataSql := `update "users" set (email , username, password) = ($1, $2, $3) where id=$4`
+	dataSql := `update "users" set (email , username, password) = ($1, $2, $3) where id=$4`
 
-    db.Exec(context.Background(), dataSql, email, username, password, id)
+	db.Exec(context.Background(), dataSql, email, username, password, id)
 }
 
 func UpdatePassword(password string, id int) error {
@@ -140,10 +139,10 @@ func UpdatePassword(password string, id int) error {
 	defer db.Close(context.Background())
 
 	dataPassword := lib.Encrypt(password)
-	
+
 	dataSql := `UPDATE "users" SET password = $1 WHERE id = $2`
 	_, err := db.Exec(context.Background(), dataSql, dataPassword, id)
-	fmt.Println(dataSql,"halo")
+	fmt.Println(dataSql, "halo")
 	if err != nil {
 		return fmt.Errorf("failed to update password: %v", err)
 	}
@@ -152,24 +151,23 @@ func UpdatePassword(password string, id int) error {
 func FindOneUserByPassword(id int) dtos.ChangePassword {
 	db := lib.DB()
 	defer db.Close(context.Background())
-   
+
 	var cp dtos.ChangePassword
 	err := db.QueryRow(context.Background(), `select password from "users" where id = $1`, id).Scan(&cp.OldPassword)
 	if err != nil {
 		fmt.Println(err)
 	}
-   
+
 	return cp
-   }
-   func UpdateUsername(dataUser dtos.User, Id int) error{
+}
+func UpdateUsername(dataUser dtos.User, Id int) error {
 	db := lib.DB()
 	defer db.Close(context.Background())
 
 	dataSql := `update "users" set ("email","username") = ($1,$2) where id= $3`
-	_,err := db.Exec(context.Background(), dataSql, dataUser.Email, dataUser.Username, Id)
-if  err != nil {
-	return fmt.Errorf("failed %v",err)
-}
+	_, err := db.Exec(context.Background(), dataSql, dataUser.Email, dataUser.Username, Id)
+	if err != nil {
+		return fmt.Errorf("failed %v", err)
+	}
 	return nil
 }
-   

@@ -1,8 +1,8 @@
-host ?= 103.93.58.89
-port ?= 54323
+host ?= 143.198.222.47
+port ?= 54322
 user ?= postgres
 pass ?= 1
-db ?= event_organizer
+db ?=  snagtick_be
 
 migrate\:init:
 	PGPASSWORD=$(pass) psql -U$(user) -h $(host) -d postgres -p $(port) -c "create database $(db);"

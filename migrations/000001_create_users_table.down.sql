@@ -1,1 +1,2 @@
-drop table "users";
+drop table "role"
+drop table "users"

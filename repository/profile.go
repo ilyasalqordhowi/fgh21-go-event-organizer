@@ -11,53 +11,53 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-
-
-func CreateProfile(joinRegist dtos.JoinRegist) ( *dtos.Profile , error) {
-   db := lib.DB()
-    defer db.Close(context.Background())
-
-		joinRegist.Password = lib.Encrypt(joinRegist.Password)
-
-    var userId int
-    err := db.QueryRow(
-        context.Background(),
-        `INSERT INTO "users" ("email", "password") VALUES ($1, $2) RETURNING "id"`,
-        joinRegist.Email, joinRegist.Password,
-    ).Scan(&userId)
-    if err != nil {
-        return nil, fmt.Errorf("failed to insert into users table: %v", err)
-    }
-
-    fmt.Println("-----")
-    fmt.Println(err)
-
-   profile := dtos.Profile{
-        UserId:  userId,
-        FullName: joinRegist.Results.FullName,
-    }
-    err = db.QueryRow(
-        context.Background(),
-        `INSERT INTO "profile" ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id", "user_id") 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, picture, full_name, birth_date, gender, phone_number, profession, nationality_id, user_id`,
-        joinRegist.Results.Picture, joinRegist.Results.FullName, joinRegist.Results.Birthdate, joinRegist.Results.Gender,
-        joinRegist.Results.PhoneNumber, joinRegist.Results.Profession, joinRegist.Results.NationalityId, userId,
-    ).Scan(
-        &profile.Id, &profile.Picture, &profile.FullName, &profile.Birthdate,
-        &profile.Gender, &profile.PhoneNumber, &profile.Profession, &profile.NationalityId, &profile.UserId,
-    )
-
-    if err != nil {
-        return nil, fmt.Errorf("failed to insert into profile table: %v", err)
-    }
-    fmt.Println(&profile,"masuk")
-    return &profile, nil
-}
-func FindOneProfile(id int) (dtos.Profile, error) {
-   db := lib.DB()
+func CreateProfile(joinRegist dtos.JoinRegist) (*dtos.Profile, error) {
+	db := lib.DB()
 	defer db.Close(context.Background())
 
-	rows, err:= db.Query(context.Background(),
+	joinRegist.Password = lib.Encrypt(joinRegist.Password)
+	fmt.Println(joinRegist.Password)
+
+	var userId int
+	err := db.QueryRow(
+		context.Background(),
+		`INSERT INTO "users" ("email", "password","role_id") VALUES ($1, $2,$3) RETURNING "id"`,
+		joinRegist.Email, joinRegist.Password, joinRegist.RoleId,
+	).Scan(&userId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert into users table: %v", err)
+	}
+
+	fmt.Println("-----")
+	fmt.Println(err)
+
+	profile := dtos.Profile{
+		UserId:   userId,
+		FullName: joinRegist.Results.FullName,
+	}
+	err = db.QueryRow(
+		context.Background(),
+		`INSERT INTO "profile" ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id", "user_id") 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, picture, full_name, birth_date, gender, phone_number, profession, nationality_id, user_id`,
+		joinRegist.Results.Picture, joinRegist.Results.FullName, joinRegist.Results.Birthdate, joinRegist.Results.Gender,
+		joinRegist.Results.PhoneNumber, joinRegist.Results.Profession, joinRegist.Results.NationalityId, userId,
+	).Scan(
+		&profile.Id, &profile.Picture, &profile.FullName, &profile.Birthdate,
+		&profile.Gender, &profile.PhoneNumber, &profile.Profession, &profile.NationalityId, &profile.UserId,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert into profile table: %v", err)
+	}
+	fmt.Println(&profile, "masuk")
+	return &profile, nil
+}
+
+func FindOneProfile(id int) (dtos.Profile, error) {
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	rows, err := db.Query(context.Background(),
 		`select * from "profile" where "user_id" = $1`, id,
 	)
 	if err != nil {
@@ -67,7 +67,7 @@ func FindOneProfile(id int) (dtos.Profile, error) {
 	if err != nil {
 		return dtos.Profile{}, err
 	}
-	return profile,nil
+	return profile, nil
 }
 
 func FindAllProfile() []dtos.Profile {
@@ -83,12 +83,12 @@ func FindAllProfile() []dtos.Profile {
 	}
 	return profile
 }
-func EditProfile(data dtos.Profile, Id int) error{
+func EditProfile(data dtos.Profile, Id int) error {
 	db := lib.DB()
-    defer db.Close(context.Background())
+	defer db.Close(context.Background())
 
-    dataSql := `update "profile" set ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id") = ($1, $2, $3, $4, $5, $6, $7) where "user_id" = $8`
-    db.Exec(context.Background(), dataSql,data.Picture, data.FullName, data.Birthdate, data.Gender, data.PhoneNumber, data.Profession, data.NationalityId, Id)
+	dataSql := `update "profile" set ("picture", "full_name", "birth_date", "gender", "phone_number", "profession", "nationality_id") = ($1, $2, $3, $4, $5, $6, $7) where "user_id" = $8`
+	db.Exec(context.Background(), dataSql, data.Picture, data.FullName, data.Birthdate, data.Gender, data.PhoneNumber, data.Profession, data.NationalityId, Id)
 	return nil
 }
 func FindAllNational() []models.Nationality {
@@ -104,37 +104,36 @@ func FindAllNational() []models.Nationality {
 	}
 	return national
 }
-	func FindOneNational(id int) []models.Nationality {
-		db := lib.DB()
-		defer db.Close(context.Background())
-	
-		rows, _ := db.Query(context.Background(),
-			`select * from "nationalities" where "id" = $1`,id,
-		)
-		nationality, err := pgx.CollectRows(rows, pgx.RowToStructByPos[models.Nationality])
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(nationality)
-		return nationality
+func FindOneNational(id int) []models.Nationality {
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	rows, _ := db.Query(context.Background(),
+		`select * from "nationalities" where "id" = $1`, id,
+	)
+	nationality, err := pgx.CollectRows(rows, pgx.RowToStructByPos[models.Nationality])
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(nationality)
+	return nationality
+}
+
+func UpdateProfileImage(data dtos.Profile, id int) (dtos.Profile, error) {
+	db := lib.DB()
+	defer db.Close(context.Background())
+
+	sql := `UPDATE profile SET picture = $1 WHERE user_id=$2 returning *`
+
+	row, err := db.Query(context.Background(), sql, data.Picture, id)
+	if err != nil {
+		return dtos.Profile{}, nil
 	}
 
-
-	func UpdateProfileImage(data dtos.Profile, id int) (dtos.Profile, error) {
-		db := lib.DB()
-		defer db.Close(context.Background())
-	
-		sql := `UPDATE profile SET picture = $1 WHERE user_id=$2 returning *`
-	
-		row, err := db.Query(context.Background(), sql, data.Picture, id)
-		if err != nil {
-			return dtos.Profile{}, nil
-		}
-	
-		profile, err := pgx.CollectOneRow(row, pgx.RowToStructByName[dtos.Profile])
-		if err != nil {
-			return dtos.Profile{}, nil
-		}
-	
-		return profile, nil
+	profile, err := pgx.CollectOneRow(row, pgx.RowToStructByName[dtos.Profile])
+	if err != nil {
+		return dtos.Profile{}, nil
 	}
+
+	return profile, nil
+}
